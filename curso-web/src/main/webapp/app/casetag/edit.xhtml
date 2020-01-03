@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+	  xmlns:p="http://primefaces.org/ui"
+	  xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	  xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+		<f:metadata>
+            <f:viewParam name="id" value="#{caseTagEditBean.caseTagID}" />
+			<f:viewAction action="#{caseTagEditBean.init()}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+		<ui:composition template="/templates/main.xhtml" >
+			<ui:define name="body">
+				<h:form id="c">
+					<p:panel id="ce" header="#{caseTagEditBean.c.id ne null?'Edit':'Create'} casetag">
+						<p:panelGrid columns="2">
+							Name:
+							<p:inputText value="#{caseTagEditBean.c.name}" />
+							Disabled
+							<p:selectBooleanButton onLabel="Enabled" offLabel="Disabled" onIcon="fa fa-check" offIcon="fa fa-remove"
+                                                   value="#{caseTagEditBean.c.disabled}"/>
+						</p:panelGrid>
+						<p:commandButton ajax="false" action="#{caseTagEditBean.save()}" value="Save"  icon="fa fa-save" id="save" />
+						<p:commandButton ajax="false" action="#{caseTagEditBean.finish()}" value="OK" icon="fa fa-check" id="finish" />
+						<p:button outcome="index.xhtml" value="CaseTags"  icon="fa fa-bars" id="list" />
+					</p:panel>
+				</h:form>
+			</ui:define>
+		</ui:composition>
+    </h:body>
+</html>

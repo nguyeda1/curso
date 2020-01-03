@@ -1,0 +1,226 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:view="http://xmlns.jcp.org/jsf/composite/view">
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="id" value="#{taskEditBean.taskID}" />
+            <f:viewParam name="return" value="#{taskEditBean.returnTo}" />
+            <f:viewAction action="#{taskEditBean.init()}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c">
+                    <p:panel id="ce" header="Task #{taskEditBean.c.name}">
+                        <h:panelGrid columns="3" styleClass="mobile-table">
+                            <p:panelGrid columns="2">
+                                Id:
+                                <h:outputText value="#{taskEditBean.c.id}" />
+                                Name:
+                                <h:outputText value="#{taskEditBean.c.name}" />
+                                Assignee:
+                                <h:outputText value="#{taskEditBean.c.assignee.fullname}" />
+                                <h:outputText value="Case:" rendered="#{taskEditBean.c.cursoCase ne null}" />
+                                <h:link outcome="/app/case/view.xhtml" value="#{taskEditBean.c.cursoCase.name}" rendered="#{taskEditBean.c.cursoCase ne null}">
+                                    <f:param name="id" value="#{taskEditBean.c.cursoCase.id}" />
+                                    <f:param value="return" name="#{taskEditBean.c.cursoCase.caseState}" />
+                                </h:link>
+                                <h:outputText value="Listing:" rendered="#{taskEditBean.c.listing ne null}" />
+                                <h:link outcome="/app/listing/view.xhtml" value="#{taskEditBean.c.listing.name}" rendered="#{taskEditBean.c.listing ne null}">
+                                    <f:param name="id" value="#{taskEditBean.c.listing.id}" />
+                                </h:link>
+                                Locality:
+                                <h:outputText value="#{taskEditBean.c.locality ne null ? taskEditBean.c.locality.name : ''}"/>
+                                Finished:
+                                <h:outputText value="#{taskEditBean.c.finished}"/>
+                                CreatedOn:
+                                <h:outputText value="#{taskEditBean.c.createdOn}" >
+                                    <f:convertDateTime dateStyle="short" type="both" timeZone="#{sess.timezone}" />
+                                </h:outputText>
+                                CreatedBy:
+                                <h:outputText value="#{taskEditBean.c.createdBy.fullname}"/>
+                                Planned on:
+                                <h:outputText value="#{taskEditBean.c.plannedOn}" rendered="#{!taskEditBean.c.cursoCase.template}" >
+                                    <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                                </h:outputText>
+                                <h:outputText value="+ #{taskEditBean.c.plannedOnInDays}" rendered="#{taskEditBean.c.cursoCase.template}" />
+                                Deadline:
+                                <h:outputText value="#{taskEditBean.c.deadline}" rendered="#{!taskEditBean.c.cursoCase.template}" >
+                                    <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                                </h:outputText>
+                                <h:outputText value="+ #{taskEditBean.c.deadlineInDays}" rendered="#{taskEditBean.c.cursoCase.template}" />
+                                FinishedOn:
+                                <h:outputText value="#{taskEditBean.c.finishedOn}" >
+                                    <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                                </h:outputText>
+                                Priority:
+                                <h:outputText value="#{taskEditBean.c.priority}" />
+                                Description:
+                                <h:outputText value="#{taskEditBean.c.description}" styleClass="preformatted"/>
+
+                            </p:panelGrid>
+                            <p:panelGrid>
+                                <view:files type="TASK_IMAGE" refobj="#{taskEditBean.c}" collapsed="false" header="Task files"  disabledFolders="true" />
+                                <p:panel header="Comments (#{taskEditBean.comments.size()})" toggleable="true" id="comments">
+                                    <p:dataList value="#{taskEditBean.comments}" var="c">
+                                        <strong>
+                                            <h:outputText value="#{c.createdOn}">
+                                                <f:convertDateTime type="both" timeStyle="short" timeZone="#{sess.timezone}" />
+                                            </h:outputText>
+                                            #{c.createdBy.username}:
+                                        </strong>
+                                        <h:outputText value="#{c.text}" style="white-space: pre-wrap;" escape="false"/>
+                                    </p:dataList>
+                                    <p:inputTextarea value="#{taskEditBean.newComment.text}" id="comment-text" styleClass="comment-text" style="width: calc(100% - 10px)"  />
+                                    <p:outputPanel>
+                                        <p:commandButton process="comments" update="comments" actionListener="#{taskEditBean.addNewComment}" value="Add" id="addc" />
+                                        <p:menuButton value="Formatting">
+                                            <p:menuitem value="Bold" onclick="appendToComments('&lt;b&gt;&lt;\/b&gt;');"/>
+                                            <p:menuitem value="Italic" onclick="appendToComments('&lt;i&gt;&lt;\/i&gt;');"/>
+                                        </p:menuButton>
+                                    </p:outputPanel>
+                                    <p:blockUI block="comments" widgetVar="buic" animate="false" trigger="addc">
+                                        <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                                    </p:blockUI>
+                                    <script type="application/javascript">
+                                        function appendToComments(text) {
+                                            let note = document.querySelector('.comment-text');
+                                            note.value = note.value + " " + text;
+                                        }
+                                    </script>
+                                </p:panel>
+                                <p:panel header="Problems" toggleable="true" id="problems">
+                                    <style type="text/css">
+                                        .c8 {width: 80%}
+                                        .c2 {width: 20%}
+                                    </style>
+                                    <h:outputText value="#{taskEditBean.c.problemText}" style="white-space: pre-wrap;" />
+
+                                    <p:blockUI block="problems" widgetVar="buic" animate="false" trigger="addc">
+                                        <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                                    </p:blockUI>
+                                </p:panel>
+                            </p:panelGrid>
+                        </h:panelGrid>
+
+                        <p:dataTable id="dt" value="#{taskEditBean.subtaskList}" var="st">
+                            <f:facet name="header">Subtasks
+                                <p:commandButton type="button" onclick="PF('#{cc.clientId}newItem').show();" value="Add subtask" icon="fa fa-plus" />
+                            </f:facet>
+                            <p:column headerText="Id" width="50">
+                                <h:outputText value="#{st.id}">
+                                </h:outputText>
+                            </p:column>                                                
+                            <p:column headerText="Name">
+                                <h:outputText value="#{st.name}">
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="State" width="90">
+                                <h:outputText value="#{st.state}">
+                                </h:outputText>
+                            </p:column>
+                            <p:column width="20" styleClass="actions">
+                                <p:commandLink styleClass="fa fa-edit" oncomplete="PF('newItem').show();" update=":c:nidlg" process="@this">
+                                    <f:setPropertyActionListener value="#{st}" target="#{taskEditBean.newSubtask}" />
+                                </p:commandLink>
+                            </p:column>
+                        </p:dataTable>
+
+                        <p:panel collapsed="true" toggleable="true" header="Activity" rendered="#{sess.user.admin or sess.user.sales or sess.user.operationsManagement or sess.user.listingsManager}" >
+                            <p:dataTable id="dta" value="#{taskEditBean.taskActivity}" emptyMessage="No taskActivity found" var="a" 
+                                         rows="#{activityTaskListState.rows}" rowsPerPageTemplate="10,20,50,100"  first="#{activityTaskListState.page}" binding="#{activityTaskListState.datatable}"
+                                         paginator="true" paginatorPosition="top"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" lazy="true" >
+                                <p:ajax event="page" listener="#{activityTaskListState.onPageChange}"/>
+                                <p:column headerText="Id" width="50">
+                                    <h:outputText value="#{a.id}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Log" >
+                                    <h:outputText value="#{a.log}" escape="false">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Created by" width="120">
+                                    <h:outputText value="#{a.createdBy.username}" escape="false">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Created on" width="150">
+                                    <h:outputText value="#{a.createdOn}">
+                                        <f:convertDateTime timeZone="#{sess.timezone}" type="both" />
+                                    </h:outputText>
+                                </p:column>
+                            </p:dataTable>
+                        </p:panel>
+                        <p:button outcome="edit.xhtml" value="Edit"  icon="fa fa-edit" id="edit" rendered="#{sess.user.admin or sess.user.operationsManagement or sess.user.sales or sess.user.warehouse or sess.user.cleaning}" >
+                            <f:param name="id" value="#{taskEditBean.c.id}" />
+                            <f:param name="return" value="#{taskEditBean.returnTo}" rendered="#{taskEditBean.returnTo ne null}" />
+                        </p:button>
+                        <p:button outcome="/app/task/index.xhtml" value="Tasks"  icon="fa fa-bars" id="list" >
+                            <f:param name="taskState" value="#{taskEditBean.returnTo eq null or taskEditBean.returnTo eq 'CASE'?'IN_PROGRESS':taskEditBean.returnTo}" />
+                        </p:button>
+                    </p:panel>
+
+                    <p:dialog id="dlg" modal="true" widgetVar="newItem" header="Subtask details">
+                        <p:ajax event="close" listener="#{taskEditBean.reset()}" update="nidlg" process="@this"/>
+                        <p:outputPanel id="nidlg">
+                            <style>
+                                .column1{ width: 30%}
+                                .column2{ width: 70%}
+                            </style>
+                            <h:panelGrid columns="2" columnClasses="column1 colmun2" width="100%">
+                                Name:
+                                <p:inputText value="#{taskEditBean.newSubtask.name}" />
+                                State:
+                                <p:selectOneMenu value="#{taskEditBean.newSubtask.state}" >
+                                    <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                    <f:selectItems value="#{enum.subtaskState}" />
+                                </p:selectOneMenu>
+                            </h:panelGrid>
+
+                            <p:commandButton process="dlg" icon="fa fa-check" onstart="PF('bui').show();" update="dt dta :msgs" oncomplete="PF('bui').hide();if(PF('msgs').jq.html()==='')PF('newItem').hide();" action="#{taskEditBean.addNewSubTask}" />
+                            <p:blockUI block="nidlg" widgetVar="bui" animate="false">
+                                <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                            </p:blockUI>
+                        </p:outputPanel>
+                    </p:dialog>
+
+
+                    <p:dialog id="dlgCopy" modal="true" widgetVar="newCopyItem" header="Copy task">
+                        <p:ajax event="close" listener="#{taskEditBean.resetTask()}" update="nidlgCopy" process="@this"/>
+                        <p:outputPanel id="nidlgCopy">
+                            <style>
+                                .column1{ width: 30%}
+                                .column2{ width: 70%}
+                            </style>
+                            <h:panelGrid columns="2" columnClasses="column1 colmun2" width="100%">
+                                Listing:
+                                <p:selectOneMenu value="#{taskEditBean.copyLis}" converter="#{listingConverter}">
+                                    <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                    <f:selectItems value="#{taskEditBean.listings}" var="u" itemLabel="#{u.name}" />
+                                </p:selectOneMenu>
+                            </h:panelGrid>
+
+                            <p:commandButton process="dlgCopy" icon="fa fa-check" onstart="PF('bui').show();" ajax="false" action="#{taskEditBean.copyTask}" />
+                        </p:outputPanel>
+                    </p:dialog>
+
+
+                    <p:outputPanel  id="bui">						
+                        <p:blockUI block=":c"  animate="false" widgetVar="bui">
+                            <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                        </p:blockUI>
+                    </p:outputPanel>
+
+
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

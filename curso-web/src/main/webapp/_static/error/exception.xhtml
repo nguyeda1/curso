@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+				xmlns:h="http://xmlns.jcp.org/jsf/html"
+				xmlns:p="http://primefaces.org/ui"
+				xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+				xmlns:f="http://xmlns.jcp.org/jsf/core"
+				template="/templates/error.xhtml" >
+	<ui:define name="error_title">Error 500 - Internal Server Error</ui:define>
+	<ui:define name="error_message">
+		<h:outputText value="#{pfExceptionHandler.timestamp}">
+			<f:convertDateTime type="both" timeZone="#{sess.timezone}" />
+		</h:outputText> 
+		#
+		#{pfExceptionHandler.type}
+	</ui:define>
+	<ui:define name="error_body">
+		<ui:repeat value="#{exceptionPrinterBean.exCauses(pfExceptionHandler.exception)}" var="e" varStatus="x" rendered="#{sess.user.admin}">
+			<h3 class="tg"><span class="ico">-</span> #{empty e.message?'[no message]':e.message}</h3>
+			<h:outputText value="#{exceptionPrinterBean.formatStackTrace(e)}" style="white-space: pre;" styleClass="tge" />
+		</ui:repeat>
+		<script type="text/javascript">
+			var toggle=function(target,anim){
+				var s=$(target).next('.tge'),
+					v=s.is(":visible");
+				if(v){if(anim)s.slideUp();else s.hide();}
+				else{if(anim)s.slideDown();else s.show();}
+				$('.ico',target).html(v?'+':'-');
+			};
+			$('.errorpage h3.tg').click(function(e){
+				toggle(e.target,true);
+			});
+			$('.errorpage h3.tg:not(:last)').each(function(){toggle(this);});
+		</script>
+	</ui:define>				
+</ui:composition>

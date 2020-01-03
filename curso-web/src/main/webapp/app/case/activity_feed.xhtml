@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <f:metadata>
+        <f:viewAction action="#{activityBean.init()}" />
+    </f:metadata>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c" styleClass="case-index">
+                    <p:dataTable 
+                        value="#{activityBean.activity}" var="e"  emptyMessage="No activity found"
+                        rows="#{activityListState.rows}" rowsPerPageTemplate="10,20,50,100"  first="#{activityListState.page}"
+                        binding="#{activityListState.datatable}" id="dt" paginator="true" paginatorPosition="top"
+                        paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                        lazy="true" rowStyleClass="row-hover">
+                        <f:facet name="header">
+                            <p:outputPanel style="overflow: hidden;">
+                                <p:outputPanel styleClass="buttons" style="float: left; display: inline-block; margin: 2px 0;">
+                                    <p:button outcome="#{sess.user.sales ? '/app/case/index.xhtml?role=sales' : '/app/case/index.xhtml?role=operationsmanagement'}" value="Cases" />
+                                    <p:button outcome="/app/task/index.html" value="Tasks" />
+                                    <p:button outcome="/app/case/activity_feed.html" value="Activity feed" disabled="true"/>
+                                    <p:button onclick="window.open('#{app.taskmanagerUrl}');return false" value="Taskmanager app"  />
+                                </p:outputPanel>
+                            </p:outputPanel>
+                            User
+                            <h:selectOneListbox value="#{activityBean.user}" size="1" converter="#{userConverter}" id="user">
+                                <f:selectItem noSelectionOption="true"/>
+                                <f:selectItems value="#{userBean.userListWithRestrictedAdmin}" var="u" itemLabel="#{u.username}" />
+                                <p:ajax event="change" update="dt :c:bui" process="@this" />
+                            </h:selectOneListbox>
+                        </f:facet>
+
+                        <p:ajax event="page" listener="#{activityListState.onPageChange}"/>
+                        <p:ajax event="sort" listener="#{activityListState.onSortChange}"/>
+                        <p:ajax event="filter" listener="#{activityListState.onFilterChange}" />
+                        <p:column headerText="ID" sortBy="#{e.id}" filterBy="#{e.id}" filterValue="#{activityListState.filterState('id').value}" id="id" width="5" filterStyle="width: 40px;">
+                            <h:outputText value="#{e.id}"/>
+                        </p:column>
+                        <p:column headerText="CreatedBy" sortBy="#{e.createdBy}"  id="createdBy" width="20">
+                            <h:outputText value="#{e.createdBy.username}"/>
+                        </p:column>
+                        <p:column headerText="CreatedOn" sortBy="#{e.createdOn}"  id="createdOn" width="20" >
+                            <h:outputText value="#{e.createdOn}">
+                                <f:convertDateTime dateStyle="short" type="both" timeZone="#{sess.timezone}" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="Log" width="170" filterBy="#{e.log}" filterValue="#{activityListState.filterState('log').value}" id="log" filterStyle="width: 170px;" filterMatchMode="contains">
+                            <h:outputText value="#{e.log}" escape="false"/>
+                        </p:column>
+                        <p:column headerText="Task" width="15" id="taskId" sortBy="#{e.view.taskId}" filterBy="#{e.view.taskId}" filterValue="#{activityListState.filterState('taskId').value}" >
+                            <p:link outcome="/app/task/view.xhtml" value="#{e.view.taskId}"  rendered="#{activityBean.toTaskActivity(e) ne null}">
+                                <f:param name="id" value="#{activityBean.toTaskActivity(e).task.id}" />
+                            </p:link>
+                        </p:column>
+                        <p:column headerText="Case" width="15" sortBy="#{e.view.caseId}" filterBy="#{e.view.caseId}" filterValue="#{activityListState.filterState('view.caseId').value}">
+                            <p:link outcome="/app/case/view.xhtml" value="#{activityBean.toCaseActivity(e).cursoCase.id}" rendered="#{activityBean.toCaseActivity(e) ne null}">
+                                <f:param name="id" value="#{activityBean.toCaseActivity(e).cursoCase.id}" />
+                            </p:link>
+                        </p:column>
+                    </p:dataTable>
+                    <p:outputPanel  id="bui">						
+                        <p:blockUI block="dt" trigger=":c:dt:user" animate="false">
+                            <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                        </p:blockUI>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

@@ -1,0 +1,222 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <f:metadata>
+        <f:viewParam name="caseState" value="#{caseBean.caseStr}" />
+        <f:viewParam name="role" value="#{caseBean.roleStr}" />
+        <f:viewParam name="template" value="#{caseBean.template}" />
+        <f:viewAction action="#{caseBean.init()}" />
+    </f:metadata>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c" styleClass="case-index">
+                    <p:dataTable 
+                        value="#{caseBean.cases}" var="e"  emptyMessage="No case found"
+                        rows="#{caseListState.rows}" rowsPerPageTemplate="10,20,50,100"  first="#{caseListState.page}"
+                        binding="#{caseListState.datatable}" id="dt" paginator="true" paginatorPosition="top"
+                        paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                        lazy="true" rowStyleClass="row-hover">
+                        <f:facet name="header">
+                            <p:outputPanel style="overflow: hidden;">
+                                <p:outputPanel styleClass="buttons" style="float: left; display: inline-block; margin: 2px 0;">
+                                    <p:button outcome="#{sess.user.sales ? '/app/case/index.xhtml?role=sales' : '/app/case/index.xhtml?role=operationsmanagement'}" value="Cases" disabled="true" />
+                                    <p:button outcome="/app/task/index.html" value="Tasks" />
+                                    <p:button outcome="/app/case/activity_feed.html" value="Activity feed"/>
+                                    <p:button onclick="window.open('#{app.taskmanagerUrl}');return false" value="Taskmanager app"  />
+                                </p:outputPanel>
+                                <p:outputPanel styleClass="buttons states" style="float: right; display: inline-block; margin: 2px 0;">
+                                    <ui:repeat value="#{enum.caseState}" var="cs" >
+                                        <p:button value="#{cs.label} (#{caseBean.getCaseCount(cs)})" outcome="/app/case/index.xhtml">
+                                            <f:param name="caseState" value="#{cs}" />
+                                            <f:param name="role" value="#{caseBean.roleStr}" />
+                                        </p:button>
+                                    </ui:repeat>
+                                </p:outputPanel>
+                            </p:outputPanel>
+                        </f:facet>
+                        <f:facet name="header">
+                            <p:outputPanel styleClass="buttons" style="margin: 3px 0 0;">
+                                <p:selectBooleanButton onLabel="My cases" offLabel="My cases" value="#{caseBean.ownedByMe}" onIcon="fa fa-user" offIcon="fa fa-user" rendered="#{not caseBean.reviewState}">
+                                    <p:ajax  event="change" process="@this" update=":c:dt :c:bui"/>
+                                </p:selectBooleanButton>
+                                <h:selectOneListbox value="#{caseBean.caseRole}" size="1" rendered="#{caseBean.reviewState}">
+                                    <f:selectItems value="#{enum.caseRole}" var="u" itemLabel="#{u.label}" />
+                                    <p:ajax event="change" update="dt :c:bui" process="@this" />
+                                </h:selectOneListbox>
+                                <p:selectBooleanButton onLabel="Assigned to me" offLabel="Assigned to me" value="#{caseBean.showMine}" onIcon="fa fa-child" offIcon="fa fa-child">
+                                    <p:ajax  event="change" process="@this" update=":c:dt :c:bui"/>
+                                </p:selectBooleanButton>
+                                <style type="text/css">
+                                    .case-dept {
+                                        min-width: auto !important;
+                                        display: inline-grid;
+                                        margin-right: 5px;
+                                        border-radius: 5px;
+                                        background: #333;
+                                    }
+                                    .case-dept label {
+                                        background: #ebebeb !important;
+                                        border-radius: 5px 0 0 5px;
+                                        padding: 4px 0 4px 9px;
+                                    }
+                                </style>
+                                <p:button outcome="edit.xhtml" value="New case" icon="fa fa-plus" >
+
+                                    <f:param name="return" value="#{caseBean.caseStateReturn}" />
+                                    <f:param name="template" value="#{caseBean.template}" />
+                                </p:button>
+
+                            </p:outputPanel>
+                        </f:facet>
+                        <p:ajax event="page" listener="#{caseListState.onPageChange}"/>
+                        <p:ajax event="sort" listener="#{caseListState.onSortChange}"/>
+                        <p:ajax event="filter" listener="#{caseListState.onFilterChange}" />
+                        <p:column headerText="ID" sortBy="#{e.id}" filterBy="#{e.id}" filterValue="#{caseListState.filterState('id').value}" id="id" width="50" filterStyle="width: 40px;">
+                            <p:link outcome="view.xhtml" value="#{e.id}" >
+                                <f:param name="id" value="#{e.id}" />
+                                <f:param name="return" value="#{caseBean.caseStateReturn}" />
+                                <f:param name="template" value="#{caseBean.template}" />
+                            </p:link>
+                        </p:column>
+                        <p:column width="240" headerText="Name" sortBy="#{e.name}" filterBy="#{e.name}" filterValue="#{caseListState.filterState('name').value}" id="name" filterStyle="max-width: 100px; width: 80%;" filterMatchMode="contains">
+                            <p:link outcome="view.xhtml" value="#{e.name}" id="namec">
+                                <f:param name="id" value="#{e.id}" />
+                                <f:param name="return" value="#{caseBean.caseStateReturn}" />
+                                <f:param name="template" value="#{caseBean.template}" />
+                            </p:link>
+                            <p:tooltip for="namec" position="bottom">
+                                <h:outputText value="#{e.description}" styleClass="preformatted" />
+                            </p:tooltip>
+                            <h:panelGroup id="tooltip" styleClass="fa fa-tags" style="color: gray; padding-left: 5px;" rendered="#{not empty e.tags}"/>
+                            <p:tooltip id="toolTipFade" for="tooltip"  position="top">
+                                <ui:repeat value="#{e.tags}" var="x">
+                                    #{x.name}<br />
+                                </ui:repeat>
+                            </p:tooltip>
+                        </p:column>
+                        <p:column headerText="Locality" sortBy="#{e.listing.locality.name}" filterBy="#{e.listing.locality.name}" filterValue="#{caseListState.filterState('listing.locality.name').value}" id="locality" width="170">
+                            <p:outputPanel style="position: relative; padding-left: 20px;" rendered="#{e.listing ne null and e.listing.locality ne null}">
+                                <div style="background-color: ##{e.listing.locality.color}; width: 20px; height: 100%; position: absolute; top: 0px; left: -2px;"></div>
+                                #{e.listing.locality.name}
+                            </p:outputPanel>
+                        </p:column>
+                        <p:column headerText="Listing" width="150" sortBy="#{e.listing.name}" filterBy="#{e.listing.name}" filterValue="#{caseListState.filterState('listing').value}" id="listing" filterMatchMode="contains">
+                            <h:link outcome="/app/listing/view.xhtml" value="#{e.listing.name}" rendered="#{e.listing ne null}">
+                                <f:param name="id" value="#{e.listing.id}" />
+                                <f:param name="return" value="#{caseBean.caseStateReturn}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="Booking" sortBy="#{e.booking}" filterBy="#{e.booking.id}" filterValue="#{caseListState.filterState('booking').value}" id="booking" width="50" filterStyle="width: 40px;"> 
+                            <h:link outcome="/app/booking/view.xhtml" value="#{e.booking.id}"  rendered="#{e.booking ne null}">
+                                <f:param name="id" value="#{e.booking.id}" />
+                                <f:param name="return" value="#{caseBean.caseStateReturn}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="Owner" width="90" sortBy="#{e.owner.username}" filterValue="#{caseListState.filterState('owner.username').value}" filterBy="#{e.owner.username}" filterStyle="width: 90%;" styleClass="truncate">
+                            <h:outputText styleClass="fa fa-exclamation" style="color: darkred; margin-right: 2px;" rendered="#{!e.owner.isAdmin() and !e.owner.isSales() and !e.owner.isOperationsManagement()}" />
+                            <h:outputText value="#{e.owner.username}" id="own"/>
+
+                            <p:tooltip for="own" > 
+                                Owner: <h:outputText value="#{e.owner.username}"/> <br />
+                                Created by: <h:outputText value="#{e.createdBy.username}"/>
+                            </p:tooltip>
+                        </p:column>
+                        <p:column headerText="Assignee" sortBy="#{e.assignee.username}" filterBy="#{e.assignee.username}" filterValue="#{caseListState.filterState('assignee.username').value}" id="assignee" width="110" rendered="#{not caseBean.caseState.new}">
+                            <h:outputText value="#{e.assignee.username}"/>
+                        </p:column>
+                        <p:column headerText="Deadline" width="70" sortBy="#{e.deadline}">
+                            <h:outputText value="#{e.deadline}">
+                                <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="FinishedOn" width="90" rendered="#{caseBean.caseState.review or caseBean.caseState.done}">
+                            <h:outputText value="#{e.finishedOn}">
+                                <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column width="20" sortBy="#{e.stats.prioritynumber}" style="text-align: center;" styleClass="priority">
+                            <p:tooltip hideDelay="0" showDelay="0" position="top" for="priority" value="#{e.priority eq 'HIGH' ? 'High priority' : (e.priority eq 'MEDIUM' ? 'Medium priority' : 'Low priority')}" />
+                            <h:outputText id="priority" styleClass="fa fa-arrow-up #{e.priority eq 'HIGH' ? 'red' : (e.priority eq 'MEDIUM' ? 'orange' : 'green')}" />
+                        </p:column>
+                        <p:column width="70" styleClass="actions">
+                            <p:link outcome="view.xhtml" styleClass="fa fa-file-o" >
+                                <f:param value="#{e.id}" name="id" /> 
+                                <f:param name="return" value="#{caseBean.caseStateReturn}" />
+                                <f:param name="template" value="#{caseBean.template}" />
+                            </p:link>
+                            <p:link outcome="edit.xhtml" styleClass="fa fa-edit" >
+                                <f:param value="#{e.id}" name="id" />
+                                <f:param name="return" value="#{caseBean.caseStateReturn}" />
+                                <f:param name="template" value="#{caseBean.template}" />
+                            </p:link>
+                            <p:commandLink styleClass="fa fa-arrow-right" id="assign" actionListener="#{caseBean.assignToMe(e)}" update="dt" rendered="#{e.caseState.new and (sess.user.operationsManagement or sess.user.admin or caseBean.userIsRole)}"/>
+                            <p:commandLink styleClass="fa fa-arrow-right" id="review" actionListener="#{caseBean.review(e)}" update="dt" rendered="#{e.caseState.inProgress}">
+                                <p:confirm message="Are you sure to pass this task for review?" />
+                            </p:commandLink>
+
+
+                            <p:commandLink styleClass="fa fa-arrow-left" id="in_progress" actionListener="#{caseBean.in_progress(e)}" update="dt" rendered="#{e.caseState.review and ((sess.user.operator and e.owner.operator) or (sess.user.sales and e.owner.sales) or (sess.user.operationsManagement and (not e.owner.operator) and (not e.owner.sales)) or (e.assignee eq sess.user) or sess.user.admin or sess.user.sales)}">
+                                <p:confirm message="Move back to in progress?" />
+                            </p:commandLink>
+                            <p:commandLink styleClass="fa fa-arrow-right"  update=":c:nidlg" oncomplete="PF('markDone').show()" rendered="#{e.caseState.review and ((sess.user.operator and e.owner.operator) or (sess.user.sales and e.owner.sales) or (sess.user.operationsManagement and (not e.owner.operator) and (not e.owner.sales)) or sess.user.admin or sess.user.sales)}">
+                                <f:setPropertyActionListener value="#{e}" target="#{caseBean.selectedCase}" />
+                            </p:commandLink>
+                        </p:column>
+                    </p:dataTable>
+                    <p:outputPanel  id="bui">						
+                        <p:blockUI block=":c"  animate="false" widgetVar="bui">
+                            <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                        </p:blockUI>
+                    </p:outputPanel>
+
+
+
+                    <p:dialog id="dlg" modal="true" widgetVar="markDone" header="CaseFeedback">
+                        <p:ajax event="close" listener="#{caseBean.resetFeedback()}" update="nidlg" process="@this"/>
+                        <p:outputPanel id="nidlg">
+                            <style>
+                                .column1{ width: 30%}
+                                .column2{ width: 70%}
+                            </style>
+                            <h:panelGrid columns="2" columnClasses="column1 colmun2" width="100%">
+                                <p:outputLabel value="Client" /><h:outputText value=""/>
+                                Sent by(client):
+                                <p:selectOneRadio value="#{caseBean.hostFeedback.type}">
+                                    <f:selectItems itemLabel="#{e.getString()}" value="#{enum.caseFeedbackType}" var="e"/>
+                                    <p:ajax update="descclient" />
+                                </p:selectOneRadio>
+                                Description(client):
+                                <p:inputText id="descclient" disabled="#{caseBean.hostFeedback.type.none}"  value="#{caseBean.hostFeedback.description}" size="31"/>
+                                <p:outputLabel value="Guest" /><h:outputText value=""/>
+                                Sent by(guest):
+                                <p:selectOneRadio value="#{caseBean.guestFeedback.type}">
+                                    <f:selectItems itemLabel="#{e.getString()}" value="#{enum.caseFeedbackType}" var="e"/>
+                                    <p:ajax update="descguest" />
+                                </p:selectOneRadio>
+                                Description(guest):
+                                <p:inputText id="descguest" disabled="#{caseBean.guestFeedback.type.none}" value="#{caseBean.guestFeedback.description}" size="31"/>
+                            </h:panelGrid>
+
+                            <p:commandButton process="dlg" icon="fa fa-check" onstart="PF('buid').show();" update="dt :msgs" oncomplete="PF('buid').hide();if(PF('msgs').jq.html()==='')PF('markDone').hide();" action="#{caseBean.done()}" >
+                                <p:confirm message="Mark as done?" />
+                            </p:commandButton>
+                            <p:blockUI block="nidlg" widgetVar="buid" animate="false">
+                                <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                            </p:blockUI>
+                        </p:outputPanel>
+                    </p:dialog>
+
+
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

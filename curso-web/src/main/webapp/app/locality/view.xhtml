@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="id" value="#{localityEditBean.localityId}" />
+            <f:viewAction action="#{localityEditBean.init()}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c">
+                    <p:panel id="ce" header="Locality ID: #{localityEditBean.c.id}">
+                        <p:panelGrid columns="2">
+                            Name:
+                            <p:outputPanel>
+                                #{localityEditBean.c.name}
+                            </p:outputPanel>
+                            Color:
+                            <p:colorPicker value="#{localityEditBean.c.color}" style="pointer-events: none;"/>
+                        </p:panelGrid>
+                        <p:button outcome="edit.xhtml"  value="Edit" icon="fa fa-edit">
+                            <f:param value="#{localityEditBean.c.id}" name="id" />
+                        </p:button>
+                    </p:panel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

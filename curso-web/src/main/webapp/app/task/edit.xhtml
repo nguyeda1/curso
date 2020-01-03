@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="id" value="#{taskEditBean.taskID}" />
+            <f:viewParam name="return" value="#{taskEditBean.returnTo}" />
+            <f:viewParam name="listingID" value="#{taskEditBean.listingID}" />
+            <f:viewAction action="#{taskEditBean.init()}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c">
+                    <p:dialog id="finishDialog" header="Select finishState" closable="true" modal="true" widgetVar="finishState" responsive="true">
+                        <h:panelGrid id="finishPanel">
+                            <p:selectOneMenu value="#{taskEditBean.c.finishedState}">
+                                <f:selectItem value="#{null}" noSelectionOption="true" itemLabel="- not selected -" />
+                                <f:selectItems value="#{enum.taskFinishState}" var="f" itemLabel="#{f.label}" />
+                                <p:ajax event="itemSelect" listener="#{taskEditBean.finishStateSelectListener()}" update=":c:finishPanel"/>
+                            </p:selectOneMenu>
+                            <h:outputText id="problemLabel" value="Reason" rendered="#{taskEditBean.c.finishedState!= null and !taskEditBean.c.finishedState.done}"/>
+                            <p:inputText id="problemInput" value="#{taskEditBean.c.problemText}" rendered="#{taskEditBean.c.finishedState!= null and !taskEditBean.c.finishedState.done}">
+                                 <p:ajax event="keyup" update=":c:finishButton"/>
+                            </p:inputText>
+                            <p:commandButton id="finishButton" disabled="#{taskEditBean.c.finishedState == null or (!taskEditBean.c.finishedState.done and empty taskEditBean.c.problemText)}" update=":msgs @form" value="Finish task" icon="fa fa-check" action="#{taskEditBean.finish()}" />
+                        </h:panelGrid> 
+
+
+                    </p:dialog>
+                    <p:panel id="ce" header="#{taskEditBean.c.id ne null?'Edit':'Create'} task" styleClass="task-edit">
+                        <style type="text/css">
+                            .col2 {width: 100%}
+                        </style>
+                        <p:panelGrid columns="2" columnClasses="col1, col2">
+                            Name:
+                            <p:inputText value="#{taskEditBean.c.name}" style="width: 99%;"/>
+                            Assignee:
+                            <p:selectOneMenu value="#{taskEditBean.c.assignee}" converter="#{userConverter}" >
+                                <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                <f:selectItems value="#{taskEditBean.users}" var="u" itemLabel="#{u.username}" />
+                                 <p:ajax update="panel" process="@this"/>
+                            </p:selectOneMenu>
+                            <h:outputText id="caseLabel" value="Case:"/>
+                            <p:selectOneMenu id="cursoCase"  disabled="#{!(taskEditBean.c.cursoCase ne null or taskEditBean.c.listing eq null)}" value="#{taskEditBean.c.cursoCase}"  converter="#{caseConverter}" style="min-width: auto; max-width: 500px;" >
+                                <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                <f:selectItems value="#{taskEditBean.cursoCases}" var="c" itemLabel="#{c.name} (#{c.id})" />
+                                <p:ajax update="listing"/>
+                                <p:ajax listener="#{taskEditBean.changeCase}"/>
+                            </p:selectOneMenu>
+                            <h:outputText id="listingLabel" value="Listing:" />
+                            <p:selectOneMenu id="listing" value="#{taskEditBean.c.listing}" converter="#{listingConverter}" disabled="#{!(taskEditBean.c.cursoCase eq null or taskEditBean.c.cursoCase.listing eq null)}">
+                                <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                <f:selectItems value="#{taskEditBean.listings}" var="li" itemLabel="#{li.name} (#{li.id})" />
+                                <p:ajax update="cursoCase"/>
+                            </p:selectOneMenu>
+                            Locality
+                            <p:selectOneMenu value="#{taskEditBean.c.customLocality}"  >
+                                <f:selectItem noSelectionOption="true" itemLabel="- default by listing (#{taskEditBean.c.locality ne null?taskEditBean.c.locality.name:'null'}) -" />
+                                <f:selectItems value="#{taskEditBean.localities}" var="l" itemLabel="#{l.name}" />
+                            </p:selectOneMenu>
+                            Planned on:
+                            <p:calendar value="#{taskEditBean.c.plannedOn}" id="plannedOn" maxdate="#{taskEditBean.c.deadline}" rendered="#{!taskEditBean.c.cursoCase.template}">
+                                <p:ajax event="dateSelect" update="deadline"/>
+                            </p:calendar>
+                            <h:panelGroup rendered="#{taskEditBean.c.cursoCase.template}">
+                                <h:outputText value="+" />
+                                <h:inputText value="#{taskEditBean.c.plannedOnInDays}" />
+                            </h:panelGroup>
+                            Deadline:
+                            <p:calendar id="deadline" value="#{taskEditBean.c.deadline}" mindate="#{taskEditBean.c.plannedOn}" rendered="#{!taskEditBean.c.cursoCase.template}">
+                                <p:ajax event="dateSelect" update="plannedOn"/>
+                                <p:ajax event="change" update="plannedOn"/>
+                            </p:calendar>
+                            <h:panelGroup rendered="#{taskEditBean.c.cursoCase.template}">
+                                <h:outputText value="+" />
+                                <h:inputText value="#{taskEditBean.c.deadlineInDays}" />
+                            </h:panelGroup>
+                            Priority:
+                            <p:selectOneMenu value="#{taskEditBean.c.priority}" >
+                                <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                <f:selectItems value="#{enum.taskPriority}" />
+                            </p:selectOneMenu>
+                            Description:
+                            <p:inputTextarea value="#{taskEditBean.c.description}" />
+                        </p:panelGrid>
+                        <p:outputPanel id="panel">
+                        <p:commandButton ajax="false" action="#{taskEditBean.save()}" value="Save and back"  icon="fa fa-save" id="save" />
+                        <p:commandButton process=":c:ce @this" update="@this" oncomplete="PF('finishState').show();" value="Finish" icon="fa fa-check" 
+                                         id="finish" rendered="#{taskEditBean.returnTo !='null'}" />						
+                        <p:button outcome="/app/task/index.xhtml" value="Tasks"  icon="fa fa-bars" id="list" >
+                            <f:param name="taskState" value="#{taskEditBean.returnTo eq null or taskEditBean.returnTo eq 'CASE'?'NEW':taskEditBean.returnTo}" />
+                        </p:button>
+                        </p:outputPanel>
+                    </p:panel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

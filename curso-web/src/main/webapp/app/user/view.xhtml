@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="id" value="#{userEditBean.userID}" />
+            <f:viewAction action="#{userEditBean.init()}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c">
+                    <p:panel id="ce" header="User #{userEditBean.c.username}" style="text-align: -webkit-center;">
+                        <p:panelGrid columns="2" style="word-break: break-all; width: 100%" columnClasses="first-info-column second-info-column">
+                            Id:
+                            <h:outputText value="#{userEditBean.c.id}" />
+                            Username:
+                            <h:outputText value="#{userEditBean.c.username}" />
+                            First name:
+                            <h:outputText value="#{userEditBean.c.firstname}" />
+                            Last name:
+                            <h:outputText value="#{userEditBean.c.lastname}" />
+                            E-mail:
+                            <h:outputText value="#{userEditBean.c.email}" />
+                            Phone:
+                            <h:outputText value="#{userEditBean.c.phone}" />
+
+                        </p:panelGrid>
+                        <div style="margin: 10px;">
+                            <p:button outcome="edit.xhtml" value="Edit"  icon="fa fa-edit" id="edit" rendered="#{sess.user.admin or sess.user.hrSupport}" >
+                                <f:param name="id" value="#{userEditBean.c.id}" />
+                            </p:button>
+                        </div>
+                    </p:panel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+				xmlns:h="http://xmlns.jcp.org/jsf/html"
+				xmlns:p="http://primefaces.org/ui"
+				xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+				xmlns:f="http://xmlns.jcp.org/jsf/core"
+				template="/templates/main.xhtml" >
+	<ui:define name="title">- Error</ui:define>
+	<ui:define name="body">
+		<div class="errorpage">
+			<h2><span class="fa fa-warning"></span>&nbsp;<ui:insert name="error_title"></ui:insert></h2>
+			<p><ui:insert name="error_message"></ui:insert></p>
+			<ui:insert name="error_body"></ui:insert>
+		</div>
+	</ui:define>
+</ui:composition>

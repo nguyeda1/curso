@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	  xmlns:cc="http://xmlns.jcp.org/jsf/composite"
+	  xmlns:p="http://primefaces.org/ui"
+	  xmlns:f="http://xmlns.jcp.org/jsf/core"
+	  xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	  xmlns:h="http://xmlns.jcp.org/jsf/html">
+
+	<!-- INTERFACE -->
+	<cc:interface>
+		<cc:attribute name="refobj" />
+		<cc:attribute name="type" required="true" type="com.schedek.curso.ejb.files.UploadType"/>
+		<cc:attribute name="header" default="Files" />
+		<cc:attribute name="collapsed" default="true" />
+		<cc:attribute name="disabled" default="false" />
+		<cc:attribute name="disabledFolders" default="false" />
+		<cc:attribute name="allowTypes" />
+	</cc:interface>
+
+	<!-- IMPLEMENTATION -->
+	<cc:implementation>
+		<p:panel id="npanel" toggleable="true" collapsed="#{cc.attrs.collapsed}">
+			<f:facet name="header">
+				#{cc.attrs.header} (#{viewFiles.dirs.size()+viewFiles.files.size()})
+				<p:fileUpload fileUploadListener="#{viewFiles.handleFileUpload}" mode="advanced" dragDropSupport="true" styleClass="files-btn-up"
+							  multiple="true" update=":msgs :#{cc.clientId}:files :#{cc.clientId}:npanel" auto="true" sizeLimit="100000000" fileLimit="1000" label="upload files"
+							  rendered="#{not cc.attrs.disabled}" />
+				<p:commandButton ajax="false" icon="fa fa-archive" rendered="#{viewFiles.dirs.size() + viewFiles.files.size() > 0}">
+					<p:fileDownload value="#{viewFiles.getFileStream(viewFiles.getZip(cc.attrs.refobj.id))}" />
+				</p:commandButton>
+				<p:commandButton type="button" rendered="#{not cc.attrs.disabled and not cc.attrs.disabledFolders}" icon="fa fa-plus" value="folder" onclick="PF('fdlgnd#{cc.clientId}').show();" />
+			</f:facet>
+			<p:outputPanel id="files" styleClass="files">
+				<p:outputPanel rendered="#{viewFiles.cwd ne null}" style="background-color: #ddd;">
+					<p:commandButton update=":#{cc.clientId}:files" icon="fa fa-arrow-left" value="Level up" process="@this">
+						<f:setPropertyActionListener target="#{viewFiles.cwd}" value="#{viewFiles.cwd.parent}" />
+					</p:commandButton>
+					<h:outputText value="#{viewFiles.cwd.path}" />
+				</p:outputPanel>
+				<ui:repeat value="#{viewFiles.dirs}" var="file">
+					<p:commandLink update=":#{cc.clientId}:files" process="@this" >
+						<f:setPropertyActionListener target="#{viewFiles.cwd}" value="#{file}" />
+						<span class="fa fa-folder-o"></span>
+						[#{file.file.name}]
+					</p:commandLink>&nbsp;
+					<p:commandLink styleClass="fa fa-trash" rendered="#{not cc.attrs.disabled and empty file.file.listFiles()}" update=":#{cc.clientId}:files" process="@this">
+						<p:confirm header="Delete directory" message="Are you sure to delete this directory?" icon="fa fa-warning" />
+						<f:setPropertyActionListener target="#{viewFiles.dirRemove}" value="#{file}" />
+					</p:commandLink>
+					<br />
+				</ui:repeat>
+				<ui:repeat value="#{viewFiles.files}" var="file">
+					<p:commandLink ajax="false" styleClass="flink" >
+						<p:fileDownload value="#{viewFiles.getFileStream(file)}" />
+						<span class="imgico">
+							<h:outputText styleClass="fa fa-file-o"  rendered="#{viewFiles.getFileIcon(file) eq null}" />
+							<h:graphicImage value="/servlet/icon?filename=#{file.path}" alt="[preview:#{file.name}]" styleClass="hoverresize"  rendered="#{viewFiles.getFileIcon(file) ne null}" />
+						</span>&nbsp;#{file.name}
+					</p:commandLink>
+					&nbsp;
+					<p:commandLink styleClass="fa fa-edit" rendered="#{not cc.attrs.disabled}" update=":#{cc.clientId}:repnl"  oncomplete="PF('fdlgrf#{cc.clientId}').show();" process="@this" >
+						<f:setPropertyActionListener target="#{viewFiles.fileRename}" value="#{file}" />
+					</p:commandLink>
+					<p:commandLink styleClass="fa fa-trash" rendered="#{not cc.attrs.disabled}" update=":#{cc.clientId}:files" process="@this">
+						<p:confirm header="Delete file" message="Are you sure to delete this file?" icon="fa fa-warning" />
+						<f:setPropertyActionListener target="#{viewFiles.fileDelete}" value="#{file}" />
+					</p:commandLink>
+					<br />
+				</ui:repeat>
+			</p:outputPanel>
+			<p:dialog widgetVar="fdlgrf#{cc.clientId}" header="Rename file" modal="true">
+				<p:outputPanel  id="repnl">
+					<h:panelGrid columns="2" rendered="#{viewFiles.fileRename ne null}">
+						Original name:
+						<h:outputText value="#{viewFiles.fileRename.name}" />
+						New name:
+						<p:outputPanel>
+							<p:inputText value="#{viewFiles.fileRenameNewName}" />
+							#{viewFiles.fileRenameExtension}
+						</p:outputPanel>
+					</h:panelGrid>
+				</p:outputPanel>
+				<p:commandButton update="repnl :#{cc.clientId}:files" process="repnl @this" oncomplete="PF('fdlgrf#{cc.clientId}').hide();" icon="fa fa-check" value="Rename file" action="#{viewFiles.renameFile()}" />
+			</p:dialog>
+		</p:panel>
+	</cc:implementation>
+</html>

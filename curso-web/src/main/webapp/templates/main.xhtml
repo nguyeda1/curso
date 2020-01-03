@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      xmlns:f="http://java.sun.com/jsf/core">
+    <h:head>
+        <title>CURSO IS <ui:insert name="title"></ui:insert></title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0"></meta>
+        <meta http-equiv="Pragma" content="no-cache"></meta>
+        <meta http-equiv="Expires" content="0" ></meta>
+        <script type="text/javascript" >
+            window.contextPath = '#{request.contextPath}';
+        </script>
+        <script type="text/javascript" src="#{request.contextPath}/_static/js/pf-locale.js" />
+        <script type="text/javascript" src="#{request.contextPath}/_static/js/dialog-fix.js" />
+        <script type="text/javascript" src="#{request.contextPath}/_static/js/jsfbind.js" />
+        <link type="text/css" rel="stylesheet" href="#{request.contextPath}/_static/css/main.css" />
+        <link type="text/css" rel="stylesheet" href="#{request.contextPath}/_static/css/featherlight_1.7.6.css" />
+        <script type="text/javascript" src="#{request.contextPath}/_static/js/linkify.js" />
+    </h:head>
+    <h:body styleClass="env-#{app.prefix}" id="body">
+        <f:view locale="#{app.locale}">
+            <h:panelGroup>
+                <h:form id="menu" styleClass="menu">
+                    <p:menubar>
+                        <p:menuitem outcome="#{sess.target}" icon="fa fa-home"  />
+                        <p:menuitem outcome="#{sess.user.sales ? '/app/case/index.xhtml?role=sales' : '/app/case/index.xhtml?role=operationsmanagement'}" 
+                                    icon="fa fa-check-square-o" value="Cases/Tasks" rendered="#{!sess.user.accountantExternal}" onclick="var v = 0; #{sess.user.admin or sess.user.accountantInternal or sess.user.sales or sess.user.operationsManagement or sess.user.sales or sess.user.operator or sess.user.internalSales or sess.user.listingCheck or sess.user.reception or sess.user.listingsManager or sess.user.warehouse or sess.user.cleaning?'':'v=1;'} if (v) {
+                    window.open('#{app.taskmanagerUrl}');
+                    return false
+                }" />
+                        <p:menuitem outcome="/app/booking/index.xhtml" icon="fa fa-suitcase" value="Bookings" rendered="#{sess.user.admin or sess.user.operator or sess.user.handyman or sess.user.internalSales or sess.user.sales or sess.user.operationsManagement or sess.user.reception or sess.user.listingsManager or sess.user.warehouse or sess.user.accountantInternal}"/>
+                        <p:menuitem outcome="/app/listing/index.xhtml" icon="fa fa-building" value="Listings" rendered="#{sess.user.admin or sess.user.operator or sess.user.sales or sess.user.internalSales or sess.user.listingsManager or sess.user.operationsManagement or sess.user.cleaning or sess.user.handyman or sess.user.keymaster or sess.user.supplyCheck or sess.user.listingCheck or sess.user.reception or sess.user.warehouse or sess.user.accountantInternal}"/>
+                        <p:menuitem outcome="/app/user/index.xhtml" icon="fa fa-user" value="Users" rendered="#{((sess.user.operator or sess.user.listingsManager) and not sess.user.admin) or sess.user.reception or sess.user.cleaning or sess.user.hrSupport}"/>
+                        <p:menuitem outcome="/app/user/index.xhtml" icon="fa fa-user" value="Users" rendered="#{sess.user.admin or sess.user.sales or sess.user.handyman or sess.user.internalSales or sess.user.operationsManagement}"/>
+                        <p:menuitem outcome="/app/locality/index.xhtml" icon="fa fa-map-marker" value="Localities" rendered="#{sess.user.admin}"/>
+
+
+                        <f:facet name="options">
+                            <p:commandButton ajax="false" action="#{contactBean.open()}" id="contact"  value="" icon="fa fa-phone" style="color: red;"/>
+                            <p:commandButton id="user" value="#{sess.user.username}" type="button" icon="fa fa-key"/>
+                            <p:menu overlay="true" trigger="user" my="left top" at="left bottom">
+                                <p:menuitem value="Odhlásit" icon="fa fa-close" action="#{sess.logout()}" ajax="false" />
+                            </p:menu>
+                        </f:facet>
+                    </p:menubar>
+                </h:form>
+                <p:outputPanel  rendered="#{sess.user ne null}">
+                    <ui:insert name="body">
+                    </ui:insert>
+                </p:outputPanel>
+                <p:outputPanel  rendered="#{sess.user eq null}">
+                    <h1>Chyba: neplatný uživatel</h1>
+                </p:outputPanel>
+                <p:outputPanel id="msgs">
+                    <h:form id="confirmdialog">
+                        <p:confirmDialog global="true" id="cdlg">
+                            <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" id="y" />
+                            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" id="n" />
+                        </p:confirmDialog>
+                    </h:form>
+                    <p:growl showDetail="true" widgetVar="msgs" />
+                    <p:ajaxExceptionHandler type="javax.faces.application.ViewExpiredException"
+                                            onexception="PF('pageblock').show();window.location = window.location.href.split('#')[0];" />
+                    <p:blockUI block=":body"  animate="false" widgetVar="pageblock">
+                        Current view has expired, <br />please wait before it loads again.<br /><br />
+                        <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                    </p:blockUI>
+                </p:outputPanel>
+                <h:form id="imp" rendered="#{sess.user.admin or sess.originalUser.admin}">
+                    <p:dialog modal="true" header="Impersonation" widgetVar="impdlg" responsive="true">
+                        <h:panelGrid columns="1">
+                            Target user:
+                            <p:autoComplete value="#{impersonation.user}" completeMethod="#{autocomplete.user}" 
+                                            var="u" itemLabel="#{u.username}" itemValue="#{u}" forceSelection="true"
+                                            converter="#{userConverter}">
+                                <p:column>
+                                    <h:outputText value="#{u.username}" />
+                                </p:column>
+                            </p:autoComplete>
+                            <p:commandButton ajax="false" action="#{impersonation.impersonate()}" value="Impersonate" icon="fa fa-check" id="impok" style="width: 100%;"/>
+                        </h:panelGrid>
+                    </p:dialog>
+                </h:form>
+
+                <iframe src="#{request.contextPath}/sessionGuard.xhtml;jsessionid=#{session.id}" class="sguard" ></iframe>
+            </h:panelGroup>
+        </f:view>
+        <p:ajaxStatus oncomplete="jsfbind()" />
+
+        <script type="text/javascript" src="#{request.contextPath}/_static/js/featherlight_1.7.6.js" />
+    </h:body>
+</html>
+

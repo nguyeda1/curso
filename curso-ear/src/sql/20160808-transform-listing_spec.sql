@@ -1,0 +1,2 @@
+﻿--INSERT INTO public.listing_spec_category \( name, orderindex\) VALUES \( '\1', \(SELECT max\(orderindex\)+1 FROM listing_spec_category\)\);
+--INSERT INTO public.listing_spec_field\( fieldtype, name, orderindex, category_id\) VALUES \('STRING', '\1', \(SELECT max\(orderindex\)+1 FROM listing_spec_field WHERE category_id=currval\('listing_spec_category_id_seq'\)\), currval\('listing_spec_category_id_seq'\)\);

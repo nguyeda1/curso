@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="state" value="#{invoiceInBean.stateStr}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c">
+                    <p:dataTable
+                        id="dt"
+                        value="#{localityBean.localities}" var="e"  emptyMessage="No localities found"
+                        >
+                        <f:facet name="header">
+                            Localities <br></br>
+                            <p:button outcome="edit.xhtml" value="New locality" icon="fa fa-plus" />
+                        </f:facet>
+
+                        <p:column headerText="ID" sortBy="#{e.id}"  id="id" width="80">
+                            <h:link outcome="view.xhtml" value="#{e.id}" >
+                                <f:param name="id" value="#{e.id}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="Name" sortBy="#{e.name}" id="name">
+                            <h:link outcome="view.xhtml" value="#{e.name}" >
+                                <f:param name="id" value="#{e.id}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="Color" sortBy="#{e.color}" id="color">
+                            <p:colorPicker  value="#{e.color}" style="pointer-events: none;"/>
+                        </p:column>
+                        <p:column width="100" rendered="#{sess.user.admin}" styleClass="actions">
+                            <p:link outcome="view.xhtml" styleClass="fa fa-file-o" >
+                                <f:param value="#{e.id}" name="id" />
+                            </p:link>
+                            <p:link outcome="edit.xhtml" styleClass="fa fa-edit" >
+                                <f:param value="#{e.id}" name="id" />
+                            </p:link>
+                            <p:commandLink update=":c:dt :c:bui msgs" styleClass="fa fa-trash" id="del">
+                                <p:confirm header="Delete locality" message="Are you sure to delete this locality?" icon="fa fa-warning" />
+                                <f:setPropertyActionListener value="#{e}" target="#{localityBean.delete}" />
+                            </p:commandLink>
+                        </p:column>
+                    </p:dataTable>
+                    <p:outputPanel  id="bui">						
+                        <p:blockUI block="dt" trigger="dt:del"  animate="false">
+                            <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                        </p:blockUI>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

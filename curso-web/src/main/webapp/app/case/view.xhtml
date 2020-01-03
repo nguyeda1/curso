@@ -1,0 +1,335 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:view="http://xmlns.jcp.org/jsf/composite/view">
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="id" value="#{caseEditBean.caseID}" />
+            <f:viewParam name="return" value="#{caseEditBean.returnTo}" />
+            <f:viewAction action="#{caseEditBean.init()}" />
+            <f:viewParam name="template" value="#{caseEditBean.template}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c">
+                    <p:panel id="ce" header="Case #{caseEditBean.c.name}">
+                        <style type="text/css">
+                            .c1 {width: 70%}
+                            .c2 {width: 30%}
+                            .cc1 {width: 150px}
+                            .cc2 {width: calc(100% - 150px)}
+                            @media (max-width: 640px) {
+                                .c1 {width: auto}
+                                .c2 {width: auto}
+                            }
+                        </style>
+                        <h:panelGrid columns="2" styleClass="mobile-table" columnClasses="c1, c2" style="width: 100%">
+                            <p:panelGrid columns="2" style="width: 100%" columnClasses="cc1, cc2">
+                                Id:
+                                <h:outputText value="#{caseEditBean.c.id}" />
+                                Name:
+                                <h:outputText value="#{caseEditBean.c.name}" />
+                                <h:outputText value="Listing:" rendered="#{caseEditBean.c.listing ne null}" />
+                                <h:link outcome="/app/listing/view.xhtml" value="#{caseEditBean.c.listing.name}" rendered="#{caseEditBean.c.listing ne null}">
+                                    <f:param name="id" value="#{caseEditBean.c.listing.id}" />
+                                </h:link>
+                                <h:outputText value="Booking:" rendered="#{caseEditBean.c.booking ne null}" />
+                                <h:link outcome="/app/booking/view.xhtml" value="#{caseEditBean.c.booking.id}" rendered="#{caseEditBean.c.booking ne null}" >
+                                    <f:param name="id" value="#{caseEditBean.c.booking.id}" />
+                                </h:link>
+                                CaseState:
+                                <h:outputText value="#{caseEditBean.c.caseState}" />
+                                Owner:
+                                <h:outputText value="#{caseEditBean.c.owner.username}" />
+                                CreatedBy:
+                                <h:outputText value="#{caseEditBean.c.createdBy.username}" />
+                                Created:
+                                <h:outputText value="#{caseEditBean.c.createdOn}" >
+                                    <f:convertDateTime dateStyle="short" type="both" timeZone="#{sess.timezone}" />
+                                </h:outputText>
+                                Deadline:
+                                <h:outputText value="#{caseEditBean.c.deadline}" >
+                                    <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                                </h:outputText>
+                                FinishedOn:
+                                <h:outputText value="#{caseEditBean.c.finishedOn}" >
+                                    <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                                </h:outputText>
+                                Assignee:
+                                <h:outputText value="#{caseEditBean.c.assignee.fullname}" />
+                                Priority:
+                                <h:outputText value="#{caseEditBean.c.priority}" />
+                                Description:
+                                <h:outputText value="#{caseEditBean.c.description}" styleClass="preformatted"/>
+                                Followers:
+                                <p:outputPanel id="dtf">
+                                    <p:commandButton icon="fa fa-plus" style="float:right;" id="usr" update=":c:ce" oncomplete="PF('userfollow').show(this.source)"/>
+                                    <p:commandButton style="float: right;" value="Follow"  icon="fa fa-plus" onstart="PF('bui').show();" update="dtf :msgs" oncomplete="PF('bui').hide();" action="#{caseEditBean.addFollower}" rendered="#{not caseEditBean.follower}"/>
+                                    <p:commandButton style="float: right;" value="Unfollow" icon="fa fa-minus" onstart="PF('bui').show();" update="dtf :msgs" oncomplete="PF('bui').hide();" action="#{caseEditBean.removeFollower}" rendered="#{caseEditBean.follower}"/>
+                                    <ui:repeat value="#{caseEditBean.c.followers}" var="t">
+                                        <h:outputText style="display: block;" value="#{t.fullname}"/>
+                                    </ui:repeat>
+                                </p:outputPanel>
+                            </p:panelGrid>
+                            <p:panel>
+                                <view:files type="CASE_IMAGE" refobj="#{caseEditBean.c}" collapsed="false" header="Case files" disabledFolders="true" />
+                                <p:panel header="Comments (#{caseEditBean.comments.size()})" toggleable="true" id="comments" rendered="#{caseEditBean.c.id ne null}">
+                                    <p:outputPanel id="comments-panel" style="padding: 1ex; ">
+                                        <p:dataList value="#{caseEditBean.comments}" var="c">
+                                            <strong>
+                                                <h:outputText value="#{c.createdOn}">
+                                                    <f:convertDateTime type="both" timeStyle="short" timeZone="#{sess.timezone}" />
+                                                </h:outputText>
+                                                #{c.createdBy.username}:
+                                            </strong>
+                                            <h:outputText value="#{c.text}" style="white-space: pre-wrap;" escape="false" />
+                                        </p:dataList>
+                                        <p:inputTextarea value="#{caseEditBean.newComment.text}" id="comment-text" styleClass="comment-text" style="width: calc(100% - 10px)"  />
+                                        <p:outputPanel>
+                                            <p:commandButton process="comments" update="comments" actionListener="#{caseEditBean.addNewComment}" value="Add" id="addc" />
+                                            <p:menuButton value="Formatting">
+                                                <p:menuitem value="Bold" onclick="appendToComments('&lt;b&gt;&lt;\/b&gt;');"/>
+                                                <p:menuitem value="Italic" onclick="appendToComments('&lt;i&gt;&lt;\/i&gt;');"/>
+                                            </p:menuButton>
+                                        </p:outputPanel>
+                                        <p:blockUI block="comments" widgetVar="buic" animate="false" trigger="addc">
+                                            <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                                        </p:blockUI>
+                                        <script type="application/javascript">
+                                            function appendToComments(text) {
+                                                let note = document.querySelector('.comment-text');
+                                                note.value = note.value + " " + text;
+                                            }
+                                        </script>
+                                    </p:outputPanel>
+                                </p:panel>
+                            </p:panel>
+                        </h:panelGrid>
+                        <p:dataTable id="dt" value="#{caseEditBean.tasks}" var="t" rowStyleClass="row-hover">
+                            <f:facet name="header">Tasks
+                                <p:commandButton type="button" onclick="PF('#{cc.clientId}newItem').show();" value="Add task" icon="fa fa-plus" />
+                            </f:facet>
+                            <p:column headerText="Id" width="50" styleClass="center">
+                                <h:outputText value="#{t.id}">
+                                </h:outputText>
+                            </p:column> 
+                            <p:column headerText="Listing" width="150" styleClass="center" rendered="#{caseEditBean.c.listing eq null}">
+                                <h:outputText value="#{t.listing.name}" />
+                            </p:column>
+                            <p:column headerText="Name" width="150">
+                                <p:link outcome="/app/task/view.xhtml" value="#{t.name}" id="namec">
+                                    <f:param value="#{t.id}" name="id" />
+                                    <f:param name="return" value="CASE" />
+                                </p:link>
+                                <p:tooltip for="namec" position="bottom">
+                                    <h:outputText value="#{t.description}" />
+                                </p:tooltip>
+                            </p:column>
+                            <p:column headerText="Assignee" width="150" styleClass="center">
+                                <h:outputText value="#{t.assignee.fullname}">
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Planned on" width="70" styleClass="center">
+                                <h:outputText value="#{t.plannedOn}" rendered="#{not caseEditBean.c.template}">
+                                    <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}"/>
+                                </h:outputText>
+                                <h:outputText value="#{t.plannedOnInDays}" rendered="#{caseEditBean.c.template}" />
+                            </p:column>
+                            <p:column headerText="Deadline" width="70" styleClass="center">
+                                <h:outputText value="#{t.deadline}" rendered="#{not caseEditBean.c.template}">
+                                    <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                                </h:outputText>
+                                <h:outputText value="#{t.deadlineInDays}" rendered="#{caseEditBean.c.template}" />
+                            </p:column>
+                            <p:column headerText="State" width="65" styleClass="center colored-option">
+                                <h:outputText styleClass="fa fa-check green" rendered="#{t.finishedState eq 'DONE'}" />
+                                <h:outputText styleClass="fa fa-question orange" rendered="#{t.finishedState eq 'PARTIALLY'}" />
+                                <h:outputText styleClass="fa fa-times red" rendered="#{t.finishedState eq 'NOT_DONE'}" />
+                            </p:column>                                                
+                            <p:column headerText="FinishedOn" width="90" styleClass="center">
+                                <h:outputText value="#{t.finishedOn}">
+                                    <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Order" width="50" styleClass="center">
+                                <h:outputText value="#{t.priorityOnScreen}">
+                                </h:outputText>
+                            </p:column>  
+                            <p:column headerText="Priority" width="70" styleClass="center">
+                                <h:outputText value="#{t.priority}">
+                                </h:outputText>
+                            </p:column>                                      
+                            <p:column width="48">
+                                <p:link outcome="/app/task/view.xhtml" styleClass="fa fa-file-o" >
+                                    <f:param value="#{t.id}" name="id" />
+                                    <f:param name="return" value="CASE" />
+                                </p:link>
+                                <p:link outcome="/app/task/edit.xhtml" styleClass="fa fa-edit" >
+                                    <f:param value="#{t.id}" name="id" />
+                                    <f:param name="return" value="CASE" />
+                                </p:link>
+                                <p:commandLink update="dt :c:bui msgs" styleClass="fa fa-trash" id="del" rendered="#{sess.user.admin or sess.user.operationsManagement}">
+                                    <p:confirm header="Delete task" message="Are you sure to delete this task?" icon="fa fa-warning" />
+                                    <f:setPropertyActionListener value="#{t}" target="#{taskBean.delete}" />
+                                </p:commandLink>
+                            </p:column>
+                        </p:dataTable>
+                        <p:panel collapsed="false" toggleable="true" header="Activity" rendered="#{sess.user.admin or sess.user.sales or sess.user.operationsManagement}">
+                            <p:dataTable id="dta" value="#{caseEditBean.caseActivity}" emptyMessage="No caseActivity found" var="a"
+                                         rows="#{activityCaseListState.rows}" rowsPerPageTemplate="10,20,50,100"  first="#{activityCaseListState.page}" binding="#{activityCaseListState.datatable}"
+                                         paginator="true" paginatorPosition="top"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" lazy="true">
+                                <p:ajax event="page" listener="#{activityCaseListState.onPageChange}"/>
+                                <p:column headerText="Id" width="50">
+                                    <h:outputText value="#{a.id}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Log">
+                                    <h:outputText value="#{a.log}" escape="false">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Created by" width="120">
+                                    <h:outputText value="#{a.createdBy.username}" escape="false">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Created on" width="150">
+                                    <h:outputText value="#{a.createdOn}">
+                                        <f:convertDateTime timeZone="#{sess.timezone}" type="both" />
+                                    </h:outputText>
+                                </p:column>
+                            </p:dataTable>
+                        </p:panel>
+                        <p:button outcome="edit.xhtml" value="Edit"  icon="fa fa-edit" id="edit" >
+                            <f:param name="id" value="#{caseEditBean.c.id}" />
+                            <f:param name="return" value="#{caseEditBean.returnTo}" rendered="#{caseEditBean.returnTo ne null}" />
+                            <f:param name="template" value="#{caseEditBean.template}" rendered="#{caseEditBean.template ne null}" />
+                        </p:button>
+                       <p:button outcome="index.xhtml" value="Cases"  icon="fa fa-bars" id="list" >
+                            <f:param name="caseState" value="#{(caseEditBean.returnTo eq null or caseEditBean.returnTo == 'null')?'null':caseEditBean.returnTo}" />
+                            <f:param name="template" value="#{(caseEditBean.template eq null)?'null':caseEditBean.template}" />
+                            <f:param name="role" value="#{(caseEditBean.c.role eq null)?'null':caseEditBean.c.role.name}" />
+                        </p:button>
+                    </p:panel>
+                    <p:overlayPanel id="userfollow" hideEffect="fade" showCloseIcon="true" widgetVar="userfollow">
+                        <p:outputPanel id="uc">
+                            <p:autoComplete id="dd" forceSelection="true" value="#{caseEditBean.newFollower}" dropdown="true" converter="#{userConverter}" itemValue="#{u}" itemLabel="#{u.username}"   completeMethod="#{autocomplete.activeUser}" var="u">
+                                <p:ajax event="itemSelect" update=":c:ce" listener="#{caseEditBean.listenerFollowerChosen}" oncomplete="PF('userfollow').hide();" />
+                            </p:autoComplete>
+                        </p:outputPanel>
+                    </p:overlayPanel>
+
+                    <p:dialog id="dlgHostFeedback" modal="true" widgetVar="feedbackHost" header="Case Client Feedback">
+                        <p:ajax event="close" listener="#{caseEditBean.resetFeedback()}" update="DHostFeedback" process="@this"/>
+                        <p:outputPanel id="DHostFeedback">
+                            <style>
+                                .column1{ width: 30%}
+                                .column2{ width: 70%}
+                            </style>
+                            <h:panelGrid columns="2" columnClasses="column1 colmun2" width="100%">
+                                Sent by(client):
+                                <p:selectOneRadio value="#{caseEditBean.hostFeedback.type}" >
+                                    <f:selectItems itemLabel="#{e.getString()}" value="#{enum.caseFeedbackType}" var="e"/>
+                                    <p:ajax update="deschost" />
+                                </p:selectOneRadio>
+                                Description(client):
+                                <p:inputText  id="deschost" value="#{caseEditBean.hostFeedback.description}"  disabled="#{caseEditBean.hostFeedback.type.none}" size="31"/>
+                                <p:commandButton process="DHostFeedback" icon="fa fa-check" onstart="PF('buid').show();" update=":msgs" oncomplete="PF('buid').hide();if(PF('msgs').jq.html()==='')PF('feedbackHost').hide();" action="#{caseEditBean.addFeedback()}" />
+                                <p:blockUI block="DHostFeedback" widgetVar="buid" animate="false">
+                                    <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                                </p:blockUI>
+                            </h:panelGrid>
+                        </p:outputPanel>
+                    </p:dialog>   
+                    <p:dialog id="dlgGuestFeedback" modal="true" widgetVar="feedbackGuest" header="CaseGuestFeedback">
+                        <p:ajax event="close" listener="#{caseEditBean.resetFeedback()}" update="DGuestFeedback" process="@this"/>
+                        <p:outputPanel id="DGuestFeedback">
+                            <style>
+                                .column1{ width: 30%}
+                                .column2{ width: 70%}
+                            </style>
+                            <h:panelGrid columns="2" columnClasses="column1 colmun2" width="100%">              
+                                Sent by(guest):
+                                <p:selectOneRadio value="#{caseEditBean.guestFeedback.type}">
+                                    <f:selectItems itemLabel="#{e.getString()}" value="#{enum.caseFeedbackType}" var="e"/>
+                                    <p:ajax update="descguest" />
+                                </p:selectOneRadio>
+                                Description(guest):
+                                <p:inputText id="descguest" value="#{caseEditBean.guestFeedback.description}" disabled="#{caseEditBean.guestFeedback.type.none}" size="31"/>
+
+                            </h:panelGrid>
+
+                            <p:commandButton process="DGuestFeedback" icon="fa fa-check" onstart="PF('buid').show();" update=":msgs" oncomplete="PF('buid').hide();if(PF('msgs').jq.html()==='')PF('feedbackGuest').hide();" action="#{caseEditBean.addFeedback()}" />
+                            <p:blockUI block="DGuestFeedback" widgetVar="buid" animate="false">
+                                <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                            </p:blockUI>
+                        </p:outputPanel>
+                    </p:dialog>
+
+                    <p:dialog id="dlg" modal="true" widgetVar="newItem" header="New task">
+                        <p:ajax event="close" listener="#{caseEditBean.reset()}" update="nidlg" process="@this"/>
+                        <p:outputPanel id="nidlg">
+                            <style>
+                                .column1{ width: 30%}
+                                .column2{ width: 70%}
+                            </style>
+                            <h:panelGrid columns="2" columnClasses="column1 colmun2" width="100%">
+                                Name:
+                                <p:inputText value="#{caseEditBean.newTask.name}" />
+                                Listing:
+                                <p:selectOneMenu value="#{caseEditBean.newTask.listing}" converter="#{listingConverter}">
+                                    <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                    <f:selectItems value="#{caseEditBean.listings}" var="u" itemLabel="#{u.name}" />
+                                </p:selectOneMenu>
+                                Assignee:
+                                <p:selectOneMenu value="#{caseEditBean.newTask.assignee}" converter="#{userConverter}">
+                                    <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                    <f:selectItems value="#{taskEditBean.users}" var="u" itemLabel="#{u.username}" />
+                                </p:selectOneMenu>
+                                Planned on:
+                                <p:calendar value="#{caseEditBean.newTask.plannedOn}" rendered="#{not caseEditBean.c.template}" />
+                                <h:panelGroup rendered="#{caseEditBean.c.template}">
+                                    <h:outputText value="+" />
+                                    <p:inputText value="#{caseEditBean.newTask.plannedOnInDays}" />
+                                </h:panelGroup>
+                                Deadline:
+                                <p:calendar value="#{caseEditBean.newTask.deadline}" rendered="#{not caseEditBean.c.template}" />
+                                <h:panelGroup rendered="#{caseEditBean.c.template}">
+                                    <h:outputText value="+" />
+                                    <p:inputText value="#{caseEditBean.newTask.deadlineInDays}"  />
+                                </h:panelGroup>
+                                Priority:
+                                <p:selectOneMenu value="#{caseEditBean.newTask.priority}" >
+                                    <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                    <f:selectItems value="#{enum.taskPriority}" />
+                                </p:selectOneMenu>
+                                Description:
+                                <p:inputTextarea value="#{caseEditBean.newTask.description}" cols="37" rows="7" style="position: relative; right: 30px;"/>
+                            </h:panelGrid>
+
+                            <p:commandButton process="dlg" icon="fa fa-check" onstart="PF('bui').show();" update="dt dta :msgs" oncomplete="PF('bui').hide();if(PF('msgs').jq.html()==='')PF('newItem').hide();" action="#{caseEditBean.addNewTask}" rendered="#{!caseEditBean.newTask.purchaseItemCheck}" />
+                            <p:blockUI block="nidlg" widgetVar="bui" animate="false">
+                                <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                            </p:blockUI>
+                        </p:outputPanel>
+                    </p:dialog>
+
+
+
+
+                    <p:outputPanel  id="bui">						
+                        <p:blockUI block=":c"  animate="false" widgetVar="bui">
+                            <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                        </p:blockUI>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

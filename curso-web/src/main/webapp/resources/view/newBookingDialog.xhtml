@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	  xmlns:cc="http://xmlns.jcp.org/jsf/composite"
+	  xmlns:p="http://primefaces.org/ui"
+	  xmlns:h="http://xmlns.jcp.org/jsf/html"
+	  xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+	<!-- INTERFACE -->
+	<cc:interface>
+	</cc:interface>
+
+	<!-- IMPLEMENTATION -->
+	<cc:implementation>
+		<p:dialog modal="true" header="Choose listing" widgetVar="dli" width="600" responsive="true">
+			<p:dataTable 
+				value="#{listingBean.listings}" var="e"  emptyMessage="No listing found"
+				rows="#{listingListState.rows}" rowsPerPageTemplate="10,20,50,100"  first="#{listingListState.page}"
+				binding="#{listingListState.datatable}" id="dtl" paginator="true" paginatorPosition="top"
+				paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				lazy="true">
+				<p:ajax event="page" listener="#{listingListState.onPageChange}"/>
+				<p:ajax event="sort" listener="#{listingListState.onSortChange}"/>
+				<p:ajax event="filter" listener="#{listingListState.onFilterChange}" />
+				<p:column headerText="ID" sortBy="#{e.id}" filterBy="#{e.id}" filterValue="#{listingListState.filterState('id').value}" id="id" width="50" filterStyle="width: 40px;">
+					<h:link outcome="edit.xhtml" value="#{e.id}" >
+						<f:param name="listing" value="#{e.id}" />
+					</h:link>
+				</p:column>
+				<p:column headerText="Name" sortBy="#{e.name}" filterBy="#{e.name}" filterValue="#{listingListState.filterState('name').value}" id="name" width="150">
+					<h:link outcome="edit.xhtml" value="#{e.name}" >
+						<f:param name="listing" value="#{e.id}" />
+					</h:link>
+				</p:column>
+			</p:dataTable>
+		</p:dialog>
+	</cc:implementation>
+</html>

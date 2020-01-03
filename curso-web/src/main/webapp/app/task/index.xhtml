@@ -1,0 +1,254 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <f:metadata>
+        <f:viewParam name="taskState" value="#{taskBean.taskStr}" />
+        <f:viewParam name="role" value="#{taskBean.roleStr}" />
+        <f:viewAction action="#{taskBean.init()}" />
+    </f:metadata>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c" styleClass="task-index case-index">
+                    <p:dialog id="dlgCopy" modal="true" widgetVar="newCopyItem" header="Copy task">
+                        <p:outputPanel id="nidlgCopy">
+                            <style type="text/css">
+                                .column1{ width: 30%}
+                                .column2{ width: 70%}
+                            </style>
+                            <h:panelGrid columns="2" columnClasses="column1, colmun2" width="100%">
+                                Listing:
+                                <p:selectOneMenu value="#{taskBean.copyLis}" converter="#{listingConverter}">
+                                    <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                    <f:selectItems value="#{taskBean.listings}" var="u" itemLabel="#{u.name}" />
+                                </p:selectOneMenu>
+                            </h:panelGrid>
+
+                            <p:commandButton process="dlgCopy" icon="fa fa-check" onstart="PF('bui').show();" ajax="false" action="#{taskBean.copyTask}" />
+                        </p:outputPanel>
+                    </p:dialog>
+                    <p:dataTable
+                        value="#{taskBean.tasks}" var="e"  emptyMessage="No task found"
+                        rows="#{taskListState.rows}" rowsPerPageTemplate="10,20,50,100"  first="#{taskListState.page}"
+                        binding="#{taskListState.datatable}" id="dt2" paginator="true" paginatorPosition="top"
+                        paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                        lazy="true" rowStyleClass="row-hover"
+                        editable="true" editMode="cell" 
+                        >
+                        <f:facet name="header">
+                            <p:outputPanel style="overflow: hidden;">
+                                <p:outputPanel styleClass="buttons" style="float: left; display: inline-block; margin: 2px 0;">
+                                    <p:button outcome="#{sess.user.sales ? '/app/case/index.xhtml?role=sales' : '/app/case/index.xhtml?role=operationsmanagement'}" value="Cases" />
+                                    <p:button outcome="/app/task/index.html" value="Tasks" disabled="true" />
+                                    <p:button outcome="/app/case/activity_feed.html" value="Activity feed" />
+                                    <p:button onclick="window.open('#{app.taskmanagerUrl}');return false" value="Taskmanager app"  />
+                                </p:outputPanel>
+                                <p:outputPanel styleClass="buttons states" style="float: right; display: inline-block; margin: 2px 0;">
+                                    <ui:repeat value="#{enum.taskState}" var="ts" >
+                                        <p:button value="#{ts.label} (#{taskBean.getTaskCount(ts)})" outcome="/app/task/index.xhtml">
+                                            <f:param name="taskState" value="#{ts}" />
+                                            <f:param name="role" value="#{taskBean.roleStr}" />
+                                        </p:button>
+                                    </ui:repeat>
+                                </p:outputPanel>
+                            </p:outputPanel>
+                            <p:outputPanel styleClass="buttons" style="margin: 3px 0 0;">
+                                <p:selectBooleanButton onLabel="Assigned to me" offLabel="Assigned to me" value="#{taskBean.showMine}" onIcon="fa fa fa-child" offIcon="fa fa fa-child">
+                                    <p:ajax  event="change" process="@this" update=":c:dt2 :c:bui"/>
+                                </p:selectBooleanButton>
+                                <p:button outcome="edit.xhtml" value="New task" icon="fa fa-plus" />
+                            </p:outputPanel>
+                        </f:facet>
+                        <p:ajax event="page" listener="#{taskListState.onPageChange}"/>
+                        <p:ajax event="sort" listener="#{taskListState.onSortChange}"/>
+                        <p:ajax event="filter" listener="#{taskListState.onFilterChange}" />
+                        <p:column headerText="ID" sortBy="#{e.id}" filterBy="#{e.id}" filterValue="#{taskListState.filterState('id').value}" id="id" width="50" filterStyle="width: 40px;">
+                            <h:link outcome="/app/task/view.xhtml" value="#{e.id}" >
+                                <f:param name="id" value="#{e.id}" />
+                                <f:param name="return" value="#{taskBean.taskState}" />
+                            </h:link>
+                        </p:column>
+                        
+                        <p:column headerText="Locality" sortBy="#{e.stats.localityName}" filterBy="#{e.stats.localityName}" filterValue="#{taskListState.filterState('stats.localityName').value}" id="locality" width="170">
+                            <p:outputPanel style="position: relative; padding-left: 20px;" rendered="#{e.locality ne null}">
+                                <div style="background-color: ##{e.locality.color}; width: 20px; height: 100%; position: absolute; top: 0px; left: -2px;"></div>
+                                #{e.locality.name}
+                            </p:outputPanel>
+                        </p:column>
+                        <p:column headerText="Listing" sortBy="#{e.stats.listingName}" filterBy="#{e.stats.listingName}" filterValue="#{taskListState.filterState('stats.listingName').value}" id="listing" width="150">
+                            <h:link outcome="/app/listing/view.xhtml" value="#{e.listing.name}" rendered="#{e.listing ne null}">
+                                <f:param name="id" value="#{e.listing.id}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="Name" sortBy="#{e.name}" filterBy="#{e.name}" filterValue="#{taskListState.filterState('name').value}" id="name" filterStyle="width: 85%" filterMatchMode="contains" width="240">
+                            <h:link outcome="/app/task/view.xhtml" value="#{e.name}" id="namec">
+                                <f:param name="id" value="#{e.id}" />
+                                <f:param name="return" value="#{taskBean.taskState}" />
+                            </h:link>
+                            <p:tooltip for="namec" position="bottom">
+                                <h:outputText value="#{e.description}" styleClass="preformatted" />
+                            </p:tooltip>
+                            <h:outputText value=" " />
+                            <h:panelGroup id="tooltipcomment" styleClass="fa fa-comment-o" rendered="#{taskBean.taskState.with_problem and !empty e.problemText}">
+                            </h:panelGroup>
+                            <p:tooltip id="commentTooltip" for="tooltipcomment" position="bottom">
+                                #{e.problemText}
+                            </p:tooltip>
+                        </p:column>
+                        <p:column headerText="Assignee"  sortBy="#{e.stats.assigneeName}" filterBy="#{e.stats.assigneeName}" filterValue="#{taskListState.filterState('stats.assigneeName').value}" id="assignee" width="120">
+                            <p:commandLink style="width: 100%; height: 100%; display: block; text-decoration: none;" id="asgn" update=":c:uc" oncomplete="PF('userchange').show(this.source)">
+                                <h:outputText value="#{e.assignee.username}"/>
+                                <f:setPropertyActionListener target="#{taskBean.currentTask}" value="#{e}" />
+                            </p:commandLink>
+                            <p:commandLink style="width: 100%; height: 18px; display: block; text-decoration: none;" id="asg-empty" update=":c:uc" oncomplete="PF('userchange').show(this.source)" rendered="#{e.assignee eq null}">
+                                <h:outputText value=""/>
+                                <f:setPropertyActionListener target="#{taskBean.currentTask}" value="#{e}" />
+                            </p:commandLink>
+                        </p:column>
+                        <p:column headerText="Case" sortBy="#{e.stats.caseName}" filterBy="#{e.stats.caseName}" filterValue="#{taskListState.filterState('stats.caseName').value}" id="cursoCase" width="250" filterMatchMode="contains">
+                            <h:link outcome="/app/case/view.xhtml" value="#{e.cursoCase.name}" rendered="#{e.cursoCase ne null}">
+                                <f:param name="id" value="#{e.cursoCase.id}" />
+                                <f:param name="return" value="#{taskBean.taskState}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="Planned on" sortBy="#{e.plannedOn}" filterBy="#{e.plannedOn}" width="60">
+                            <f:facet name="filter">
+                                <p:calendar value="#{taskBean.plannedOnFilter}"  pattern="d.M.yy" size="5" >
+                                    <p:ajax event="dateSelect" update="dt2" process="dt2"/>
+                                </p:calendar>
+                            </f:facet>
+                            <p:cellEditor>
+                                <f:facet name="output">
+                                    <h:outputText value="#{e.plannedOn}">
+                                        <f:convertDateTime dateStyle="short" type="date" pattern="d.M" timeZone="#{sess.timezone}" />
+                                    </h:outputText>
+                                </f:facet>
+                                <f:facet name="input">
+                                    <p:calendar value="#{e.plannedOn}" pages="2" id="plannedOn" maxdate="#{e.deadline}">
+                                        <p:ajax event="dateSelect" update="deadline"  process="@this" listener="#{taskBean.onCellEdit(e)}"/>
+                                    </p:calendar>
+                                </f:facet>
+                            </p:cellEditor>
+                        </p:column>
+                        <p:column headerText="Deadline" sortBy="#{e.deadline}" filterBy="#{e.deadline}" width="60">
+                            <f:facet name="filter">
+                                <p:calendar value="#{taskBean.deadlineFilter}"  pattern="d.M.yy" size="5" >
+                                    <p:ajax event="dateSelect" update="dt2" process="dt2"/>
+                                </p:calendar>
+                            </f:facet>
+                            <p:cellEditor>
+                                <f:facet name="output">
+                                    <h:outputText value="#{e.deadline}">
+                                        <f:convertDateTime dateStyle="short" type="date" pattern="d.M" timeZone="#{sess.timezone}" />
+                                    </h:outputText>
+                                    <h:outputText style="font-style:italic" value="#{e.cursoCase.deadline}" title="Case deadline" rendered="#{e.deadline eq null}">
+                                        <f:convertDateTime dateStyle="short" type="date" pattern="d.M" timeZone="#{sess.timezone}" />
+                                    </h:outputText>
+                                </f:facet>
+                                <f:facet name="input">
+                                    <p:calendar id="deadline"  pages="2" value="#{e.deadline}" mindate="#{e.plannedOn}">
+                                        <p:ajax event="dateSelect" update="plannedOn" process="@this" listener="#{taskBean.onCellEdit(e)}" />
+                                    </p:calendar>
+                                </f:facet>
+                            </p:cellEditor>
+                        </p:column>
+                        <p:column headerText="FinishedOn" sortBy="#{e.finishedOn}" filterBy="#{e.finishedOn}" width="110" rendered="#{taskBean.taskState.name() eq 'DONE'}">
+                            <f:facet name="filter">
+                                <p:calendar value="#{taskBean.finishedOnFilter}"  pattern="d.M.yy" size="5" >
+                                    <p:ajax event="dateSelect" update="dt2" process="dt2"/>
+                                </p:calendar>
+                            </f:facet>
+                            <h:outputText value="#{e.finishedOn}" id="fin">
+                                <f:convertDateTime dateStyle="short" type="both" pattern="d.M.yy HH:mm" timeZone="#{sess.timezone}" />
+                            </h:outputText>
+                        </p:column> 
+                        <p:column headerText="ReviewedBy" sortBy="#{e.reviewedBy.username}" width="80" rendered="#{not taskBean.taskState.in_Progress}">
+                            <h:outputText value="#{e.reviewedBy.username}" id="reviewedBy"/>
+                            <p:commandLink update="dt2 :c:bui msgs" styleClass="fa fa-check" id="assign-to-me" style="margin-left: 5px;"
+                                           rendered="#{(e.reviewedBy eq null) and not e.finishedState.done}">
+                                <p:confirm header="Review by me"
+                                           message="Are you sure to review by me this?"
+                                           icon="fa fa-warning"/>
+                                <f:setPropertyActionListener value="#{e}" target="#{taskBean.review}"/>
+                            </p:commandLink>
+                        </p:column>
+                        <p:column width="20" rendered="#{taskBean.taskState.with_problem}" style="text-align: center;">
+                            <f:facet name="header">
+                                <span class="fa fa-star-half-o"/>
+                            </f:facet>
+                            <p:tooltip hideDelay="0" showDelay="0" position="top" for="finished-state" value="#{e.finishedState.isPartially() ? 'Partially Done' : (e.finishedState.isNot_done() ? 'Not Done' : '')}" />
+                            <h:outputText id="finished-state" styleClass="fa #{e.finishedState.isPartially() ? 'fa-star-half-o' : (e.finishedState.isNot_done() ? 'fa-star-o' : '' )}" />
+                        </p:column>
+                        <p:column width="20" sortBy="#{e.stats.prioritynumber}" style="text-align: center;" styleClass="priority">
+                            <h:outputText styleClass="fa fa-arrow-up #{e.priority eq 'HIGH' ? 'red' : (e.priority eq 'MEDIUM' ? 'orange' : 'green')}" />
+                        </p:column>
+                        <p:column rendered="#{sess.user.admin or sess.user.operationsManagement or sess.user.warehouse or sess.user.cleaning or sess.user.listingsManager}" width="50" styleClass="actions">
+                            <p:link outcome="/app/task/view.xhtml" styleClass="fa fa-file-o" >
+                                <f:param value="#{e.id}" name="id" />
+                                <f:param name="return" value="#{taskBean.taskState}" />
+                            </p:link>
+                            <p:link outcome="/app/task/edit.xhtml" styleClass="fa fa-edit" >
+                                <f:param value="#{e.id}" name="id" />
+                                <f:param name="return" value="#{taskBean.taskState}" />
+                            </p:link>
+                            <p:commandLink update="dt2 :c:bui msgs" styleClass="fa fa-trash" id="del" rendered="#{sess.user.admin or sess.user.operationsManagement}">
+                                <p:confirm header="Delete task" message="Are you sure to delete this task?" icon="fa fa-warning" />
+                                <f:setPropertyActionListener value="#{e}" target="#{taskBean.delete}" />
+                            </p:commandLink>
+                            <p:confirmDialog widgetVar="deleteDlg" id="deleteDialog" header="Delete task" message="This task contains subtasks. Do you want to remove it anyway?" closable="false" severity="alert">
+                                <h:panelGroup layout="block" style="text-align: right">
+                                    <p:commandButton value="Yes" oncomplete="PF('deleteDlg').hide();" update="dt2 :c:bui msgs">
+                                        <f:setPropertyActionListener value="#{taskBean.task}" target="#{taskBean.forcedDelete}" />
+                                    </p:commandButton>
+                                    <p:commandButton value="No" onclick="PF('deleteDlg').hide();" />
+                                    <p:button outcome="/app/task/view.xhtml" value="Show subtasks" >
+                                        <f:param value="#{taskBean.task.id}" name="id" />
+                                        <f:param name="return" value="#{taskBean.taskState}" />
+                                    </p:button>
+                                </h:panelGroup>
+                            </p:confirmDialog>
+                            <p:commandLink id="is-done" styleClass="fa fa-check" update="dt2" action="#{taskBean.moveToDone(e)}" rendered="#{taskBean.isAssigneeOrAssigneeRole(e)   and not e.finishedState.done}">
+                                <p:confirm header="Mark as Done" message="Are you sure to mark task #{e.id} as Done?" icon="fa fa-warning" />
+                            </p:commandLink>
+                            <p:tooltip for="is-done" value="Mark as Done"/>
+                        </p:column>
+                    </p:dataTable>
+                    <p:overlayPanel id="prchange" hideEffect="fade" widgetVar="prchange">
+                        <p:outputPanel id="prc">
+                            <p:inputText id="txt1" value="#{taskBean.task.priorityOnScreen}"  rendered="#{taskBean.task ne null}" >
+                                <f:convertNumber integerOnly="true" />
+                                <p:ajax event="change" update=":c:dt2 :c:bui" process=":c:prc" listener="#{taskBean.listenerTask}" onstart="PF('bui').show(); PF('prchange').hide();" />
+                            </p:inputText>
+                            <p:slider for="txt1" rendered="#{taskBean.task ne null}" maxValue="100">
+                                <p:ajax event="slideEnd" update=":c:dt2 :c:bui" process=":c:prc" listener="#{taskBean.listenerTask}" onstart="PF('bui').show(); PF('prchange').hide();" />
+                            </p:slider>
+                        </p:outputPanel>
+                    </p:overlayPanel>
+
+                    <p:overlayPanel id="userchange"  hideEffect="fade" widgetVar="userchange">
+                        <p:outputPanel id="uc">
+                            <h:selectOneMenu style="width: 300px;" autoWidth="false" value="#{taskBean.currentTask.assignee}" converter="#{userConverter}" rendered="#{taskBean.currentTask ne null}">
+                                <f:selectItem noSelectionOption="true" itemLabel="- not selected -"/>
+                                <f:selectItems value="#{taskEditBean.users}" var="u" itemLabel="#{u.username}" />
+                                <p:ajax event="change" update=":c:dt2 :c:bui" listener="#{taskBean.listenerTaskUser}" onstart="PF('bui').show(); PF('userchange').hide();"/>
+                            </h:selectOneMenu>
+                        </p:outputPanel>
+                    </p:overlayPanel>
+
+                    <p:outputPanel  id="bui">
+                        <p:blockUI block=":c"  animate="false" widgetVar="bui">
+                            <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                        </p:blockUI>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

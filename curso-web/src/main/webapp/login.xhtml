@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+	  xmlns:f="http://java.sun.com/jsf/core">
+    <h:head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Login</title>
+        <link type="text/css" rel="stylesheet" href="#{request.contextPath}/_static/css/main.css" />
+    </h:head>
+    <h:body>
+
+        <p:panel id="login-form" header="Login">
+			<f:facet name="footer">
+				<small>
+					Version #{app.version} (build #{app.buildDate})
+				</small>
+			</f:facet>
+			<form method="POST" action="j_security_check" class="l">
+				<table>
+					<tr>
+						<td>
+							<label for="j_username">Username: </label>
+						</td>
+						<td>
+							<input type="text" id="j_username" name="j_username"/>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="j_password">Password: </label>
+						</td>
+						<td>
+							<input type="password" id="j_password" name="j_password" />
+						</td>
+					</tr>
+				</table>
+				<label class="autologin">
+					<input type="checkbox" id="autologin" name="autologin" />
+					přihlašovat se automaticky <span class="ctr"></span>
+				</label><br />
+				<button type="submit" class="r ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" id="lbtn" >
+					<span class="ui-button-text ui-c">Log in</span>
+				</button>
+			</form>
+			<h:outputScript rendered="#{app.dev}">
+				if(window.location.origin==='http://localhost:8080'){
+				$("#j_username").val('admin');
+				$("#j_password").val('12345');
+				}
+			</h:outputScript>
+			<h:outputScript>
+				/*<![CDATA[*/
+				function setCookie(name, value, expires, path, domain, secure) {
+				document.cookie= name + "=" + escape(value) +
+				((expires) ? "; expires=" + expires.toGMTString() : "") +
+				((path) ? "; path=" + path : "") +
+				((domain) ? "; domain=" + domain : "") +
+				((secure) ? "; secure" : "");
+				}
+
+				function getCookie(name) {
+				var dc = document.cookie;
+				var prefix = name + "=";
+				var begin = dc.indexOf("; " + prefix);
+				if (begin == -1) {
+				begin = dc.indexOf(prefix);
+				if (begin != 0) return null;
+				} else {
+				begin += 2;
+				}
+				var end = document.cookie.indexOf(";", begin);
+				if (end == -1) {
+				end = dc.length;
+				}
+				return unescape(dc.substring(begin + prefix.length, end));
+				}
+
+				$(function(){
+				var u=getCookie("autologin_username"),
+				p=getCookie("autologin_password");
+				if(u && p){
+				var t=3,
+				tick=function(){
+				$('.ctr').text(t<0?'':t);
+				if(t<0)return;
+				if(t--==0)$('form.l').submit();
+				else setTimeout(tick,1000);
+				};
+				$('#j_username').val(u);
+				$('#j_password').val(p);
+				$('#autologin').prop('checked','checked')
+				.click(function(){t=-1;tick();});
+				tick();
+				}
+				$('form.l').submit(function(){
+				if($('#autologin').is(':checked')){
+				setCookie("autologin_username",$('#j_username').val());
+				setCookie("autologin_password",$('#j_password').val());
+				}else{
+				setCookie("autologin_username",'');
+				setCookie("autologin_password",'');
+				}
+				});
+				});
+				/*]]>*/
+			</h:outputScript>
+		</p:panel>
+
+    </h:body>
+
+</html>
+

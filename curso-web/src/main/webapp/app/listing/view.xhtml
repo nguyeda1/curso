@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:view="http://xmlns.jcp.org/jsf/composite/view"
+      xmlns:edit="http://xmlns.jcp.org/jsf/composite/edit"
+      xmlns:pt="http://java.sun.com/jsf/passthrough"
+      >
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="id" value="#{listingEditBean.listingID}" />
+            <f:viewAction action="#{listingEditBean.init()}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/listing_menu.xhtml" >
+            <ui:define name="listing_body">
+                <h:form id="c" class="listing-view">
+                            <p:panelGrid columns="2" style="width: 100%;" columnClasses="first-info-column, second-info-column">
+                                Id:
+                                <h:outputText value="#{listingEditBean.c.id}" />
+                                <h:outputText value="Locality"/>
+                                <h:outputText value="#{listingEditBean.c.locality.name}" />
+                                Name:
+                                <h:outputText value="#{listingEditBean.c.name}" />
+                                Address:
+                                <h:outputText value="#{listingEditBean.c.address}" />
+                                Capacity:
+                                <h:outputText value="#{listingEditBean.c.capacity}" />
+                            </p:panelGrid>
+                            <p:outputPanel style="text-align: center; margin: 10px 10px;">
+                                <p:button outcome="edit.xhtml" value="Edit"  icon="fa fa-edit" id="edit" rendered="#{sess.user.admin or sess.user.sales or sess.user.listingsManager or sess.user.internalSales or sess.user.operationsManagement or sess.user.cleaning}" styleClass="ui-mobile-button">
+                                    <f:param name="id" value="#{listingEditBean.c.id}" />
+                                </p:button>
+                                <p:button outcome="/app/booking/edit.xhtml" value="New booking" icon="fa fa-plus" rendered="#{sess.user.admin or sess.user.sales or sess.user.internalSales or sess.user.operator or sess.user.reception}" styleClass="ui-mobile-button">
+                                    <f:param name="listing" value="#{listingEditBean.c.id}" />
+                                </p:button>
+                                <br class="ui-mobile-hide-visable"/>
+                            </p:outputPanel>
+
+                    <p:outputPanel  id="bui">
+                        <p:blockUI   block=":c" animate="false">
+                            <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                        </p:blockUI>
+                    </p:outputPanel>
+                </h:form>
+
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

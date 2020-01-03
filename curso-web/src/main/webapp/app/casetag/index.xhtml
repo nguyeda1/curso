@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+	  xmlns:p="http://primefaces.org/ui"
+	  xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	  xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+		<ui:composition template="/templates/main.xhtml" >
+			<ui:define name="body">
+				<h:form id="c">
+					<p:dataTable 
+							value="#{caseTagBean.caseTags}" var="e"  emptyMessage="No casetag found"
+								 rows="#{caseTagListState.rows}" rowsPerPageTemplate="10,20,50,100"  first="#{caseTagListState.page}"
+								 binding="#{caseTagListState.datatable}" id="dt" paginator="true" paginatorPosition="top"
+								 paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} {NewCaseTag}"
+								 lazy="true">
+						<f:facet name="{NewCaseTag}">
+							<p:button outcome="edit.xhtml" value="New casetag" icon="fa fa-plus" />
+						</f:facet>
+						<f:facet name="header">
+							CaseTags
+							<label>
+								<h:selectBooleanCheckbox value="#{caseTagBean.showDisabled}">
+									<p:ajax update="dt" process="@this" event="change"/>
+								</h:selectBooleanCheckbox>
+								show disabled
+							</label>
+						</f:facet>
+						<p:ajax event="page" listener="#{caseTagListState.onPageChange}"/>
+						<p:ajax event="sort" listener="#{caseTagListState.onSortChange}"/>
+						<p:ajax event="filter" listener="#{caseTagListState.onFilterChange}" />
+						<p:column headerText="ID" sortBy="#{e.id}" filterBy="#{e.id}" filterValue="#{caseTagListState.filterState('id').value}" id="id" width="120">
+							<h:link outcome="view.xhtml" value="#{e.id}" >
+								<f:param name="id" value="#{e.id}" />
+							</h:link>
+						</p:column>
+						<p:column headerText="Name" sortBy="#{e.name}" filterBy="#{e.name}" filterValue="#{caseTagListState.filterState('name').value}" id="name">
+							<h:link outcome="view.xhtml" value="#{e.name}" >
+								<f:param name="id" value="#{e.id}" />
+							</h:link>
+						</p:column>
+						<p:column rendered="#{sess.user.admin}" width="70" styleClass="actions">
+							<p:link outcome="view.xhtml" styleClass="fa fa-file-o" >
+								<f:param value="#{e.id}" name="id" />
+							</p:link>
+							<p:link outcome="edit.xhtml" styleClass="fa fa-edit" >
+								<f:param value="#{e.id}" name="id" />
+							</p:link>
+							<p:commandLink update="dt :c:bui msgs" styleClass="fa fa-trash" id="del">
+								<p:confirm header="Delete casetag" message="Are you sure to delete this casetag?" icon="fa fa-warning" />
+								<f:setPropertyActionListener value="#{e}" target="#{caseTagBean.delete}" />
+							</p:commandLink>
+						</p:column>
+					</p:dataTable>
+					<p:outputPanel  id="bui">						
+						<p:blockUI block="dt" trigger="dt:del"  animate="false">
+							<p:graphicImage value="/_static/images/ajax-loader.gif" />
+						</p:blockUI>
+					</p:outputPanel>
+				</h:form>
+			</ui:define>
+		</ui:composition>
+    </h:body>
+</html>

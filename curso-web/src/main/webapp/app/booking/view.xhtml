@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:view="http://xmlns.jcp.org/jsf/composite/view">
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="id" value="#{bookingEditBean.bookingID}" />
+            <f:viewAction action="#{bookingEditBean.init()}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c" class="booking-view">
+                    <p:panel id="ce">
+                        <f:facet name="header">
+                            Booking #{bookingEditBean.c.id}
+                            <h:outputText value="[canceled]" rendered="#{bookingEditBean.c.canceled}" style="color: red;" />
+                        </f:facet>
+                        <p:panelGrid columns="2" layout="grid" >
+                            <h:panelGroup layout="block" style="width: 100%">
+                                <p:panelGrid columns="2" style="width: 100%" columnClasses="first-info-column, second-info-column">
+                                    Id:
+                                    <h:outputText value="#{bookingEditBean.c.id}" />
+                                    Listing:
+                                    <p:outputPanel>
+                                        <p:link outcome="/app/listing/view.xhtml" value="#{bookingEditBean.c.listing.name}">
+                                            <f:param name="id" value="#{bookingEditBean.c.listing.id}" />
+                                        </p:link>
+                                    </p:outputPanel>
+                                    Start date:
+                                    <p:outputPanel>
+                                        <h:outputText value="#{bookingEditBean.c.startDate}" >
+                                            <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                                        </h:outputText>
+                                        &nbsp;
+                                        <h:outputText value="#{bookingEditBean.c.startTime}" >
+                                            <f:convertDateTime timeStyle="short" type="time" timeZone="#{sess.timezone}" />
+                                        </h:outputText>
+                                    </p:outputPanel>
+                                    End date:
+                                    <p:outputPanel>
+                                        <h:outputText value="#{bookingEditBean.c.endDate}" >
+                                            <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                                        </h:outputText>
+                                        &nbsp;
+                                        <h:outputText value="#{bookingEditBean.c.endTime}" >
+                                            <f:convertDateTime timeStyle="short" type="time" timeZone="#{sess.timezone}" />
+                                        </h:outputText>
+                                    </p:outputPanel>
+                                    Guest name:
+                                    <p:outputPanel>
+                                        <h:outputText value="#{bookingEditBean.c.guestName}" />
+                                        <h:outputText value=" + #{bookingEditBean.c.guestCount - 1}" rendered="#{bookingEditBean.c.guestCount > 1}" />
+                                        <h:outputText id="similarity" styleClass="fa fa-exclamation-triangle" rendered="#{bookingEditBean.hasSimilarGuestName()}" style="margin-left: 5px; color: orange"/>
+                                        <p:tooltip for="similarity" value="Double check templates"/>
+                                    </p:outputPanel>
+                                    State:
+                                    <h:outputText value="#{bookingEditBean.c.state}" />
+                                    Price:
+                                    <p:outputPanel>
+                                        <h:outputText value="#{bookingEditBean.c.price.price}">
+                                            <f:convertNumber minFractionDigits="4" maxFractionDigits="4" />
+                                        </h:outputText>
+                                        <h:outputText value=" #{bookingEditBean.c.price.currency.code}" />
+                                        <h:panelGroup id="transactionPairing" styleClass="fa fa-circle" style="text-decoration: none; color: #{bookingEditBean.c.stats.transaction_items_count gt 0 ? (bookingEditBean.c.coveredByPayouts ?  'DarkGreen' : 'orange') : 'DarkRed'}"/>
+                                    </p:outputPanel>
+
+                                    Canceled
+                                    <p:selectBooleanCheckbox  value="#{bookingEditBean.c.canceled}" disabled="true"/>
+
+                                </p:panelGrid>
+                            </h:panelGroup>
+                        </p:panelGrid>
+                        <div style="text-align: center; margin: 10px 20px;">
+                            <p:button outcome="edit.xhtml" value="Edit"  icon="fa fa-edit" id="edit" rendered="#{sess.user.admin or sess.user.accountantInternal or sess.user.operator or sess.user.listingsManager or sess.user.reception or sess.user.operationsManagement or sess.user.cleaning or (sess.user.sales)}" styleClass="ui-mobile-button">
+                                <f:param name="id" value="#{bookingEditBean.c.id}" />
+                            </p:button>
+
+
+
+
+                            <p:button outcome="index.xhtml" value="Bookings"  icon="fa fa-bars" id="list" rendered="#{(sess.user.admin or sess.user.accountantInternal or sess.user.operator or sess.user.listingsManager or sess.user.reception)}" styleClass="ui-mobile-button"/>
+                        </div>
+                    </p:panel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="id" value="#{userEditBean.userID}" />
+            <f:viewAction action="#{userEditBean.init()}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c" styleClass="user-edit">
+                    <p:panel id="ce" header="#{userEditBean.c.id ne null?'Edit':'Create'} user #{userEditBean.c.username}" style="text-align: -webkit-center;">
+                        <p:panelGrid columns="2" style="width: 100%" columnClasses="first-info-column second-info-column">
+                            Username:
+                            <h:outputText id="username" value="#{userEditBean.c.username}" />
+                            First name:
+                            <p:inputText id="firstname"  value="#{userEditBean.c.firstname}" />
+                            Last name:
+                            <p:inputText id="lastname" value="#{userEditBean.c.lastname}" />
+                            E-mail:
+                            <p:inputText id="email"  value="#{userEditBean.c.email}" />
+                            Phone:
+                            <p:inputText id="phone" value="#{userEditBean.c.phone}"  />
+
+                            <h:outputLabel for="pwd" value="Password:" />
+                            <p:password id="pwd" value="#{userEditBean.c.password}" match="pwdv" label="Password" feedback="true" required="#{userEditBean.c.id eq null}" requiredMessage="Password is required" />
+
+                            <h:outputLabel for="pwdv" value="Password verification:" />
+                            <p:password id="pwdv" value="#{userEditBean.c.password}" label="Password verification" />
+                        </p:panelGrid>
+                        <div style="margin: 10px;"> 
+                            <p:commandButton ajax="false" action="#{userEditBean.save()}" value="Save"  icon="fa fa-save" id="save" />
+                            <p:commandButton ajax="false" action="#{userEditBean.finish()}" value="OK" icon="fa fa-check" id="finish" />						
+                            <p:button outcome="index.xhtml" value="Users"  icon="fa fa-bars" id="list" />
+                        </div>
+                    </p:panel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

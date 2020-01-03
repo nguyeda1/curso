@@ -1,0 +1,1 @@
+﻿SELECT date_trunc('week',created),count(id) FROM airroomprice GROUP BY date_trunc('week',created) ORDER BY date_trunc('week',created);

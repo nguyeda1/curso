@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c">
+                    <p:dataTable
+                        value="#{listingBean.listings}" var="e"  emptyMessage="No listing found" 
+                        rows="#{listingListState.rows}" rowsPerPageTemplate="10,20,50,100"  first="#{listingListState.page}"
+                        binding="#{listingListState.datatable}" id="dt" paginator="true" paginatorPosition="top"
+                        paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} {NewListing}"
+                        lazy="true" selection="#{listingBean.selectedListingsList}" widgetVar="airt">
+                        <f:facet name="{NewListing}">
+                            <p:button outcome="edit.xhtml" value="New listing" icon="fa fa-plus" rendered="#{sess.user.admin or sess.user.sales or sess.user.internalSales or sess.user.operationsManagement}" />
+                        </f:facet>
+                        <f:facet name="header">
+                            Listings
+                            <label>
+                                <h:selectBooleanCheckbox value="#{listingBean.showDisabled}" >
+                                    <p:ajax update="dt" process="@this" event="change" />
+                                </h:selectBooleanCheckbox>
+                                show disabled &#160;
+                            </label>
+                        </f:facet>
+
+                        <p:ajax event="page" listener="#{listingListState.onPageChange}"/>
+                        <p:ajax event="sort" listener="#{listingListState.onSortChange}"/>
+                        <p:ajax event="filter" listener="#{listingListState.onFilterChange}" />
+                        <p:column headerText="ID" sortBy="#{e.id}" filterBy="#{e.id}" filterValue="#{listingListState.filterState('id').value}" id="id" width="60">
+                            <h:link outcome="view.xhtml" value="#{e.id}" >
+                                <f:param name="id" value="#{e.id}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="Name" sortBy="#{e.name}" filterBy="#{e.name}" filterValue="#{listingListState.filterState('name').value}" id="name" width="220">
+                            <h:panelGroup layout="span" rendered="#{e.disabled}"><i class="fa fa-ban red" style="color: darkred; padding-right: 10px" aria-hidden="true"></i> </h:panelGroup>
+                            <h:link outcome="view.xhtml" value="#{e.name}" >
+                                <f:param name="id" value="#{e.id}" />
+                            </h:link> 
+                        </p:column>
+                        <p:column headerText="Locality" sortBy="#{e.locality.name}"  filterMatchMode="equals" filterBy="#{e.locality.name}" id="locality" width="110">
+                            <f:facet name="filter">
+                                <p:selectCheckboxMenu label="&nbsp;" onchange="PF('airt').filter()" panelStyle="width:300px" scrollHeight="150"
+                                                      filter="true" filterMatchMode="startsWith" >
+                                    <f:selectItems var="l" itemLabel="#{l.name}" value="#{listingBean.localities}" />
+                                </p:selectCheckboxMenu>
+                            </f:facet>
+                            #{e.locality.name}
+                        </p:column>
+                        <p:column sortBy="#{e.capacity}" filterBy="#{e.capacity}" id="capacity" width="40" 
+                                  filterStyle="width: 30px;" filterMatchMode="equals"
+                                  filterValue="#{listingListState.filterState('capacity').value}">
+                            <f:facet name="filter">
+                                <p:selectCheckboxMenu label="&nbsp;" onchange="PF('airt').filter()" panelStyle="width:300px" scrollHeight="150">
+                                    <f:selectItems value="#{listingBean.capacityOptions}" />
+                                </p:selectCheckboxMenu>
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText styleClass="fa fa-users" />
+                            </f:facet>
+                            #{e.capacity}
+                        </p:column>
+                        <p:column rendered="#{sess.user.admin or sess.user.internalSales or sess.user.reception or sess.user.listingsManager}" width="90" styleClass="actions">
+                            <p:link outcome="view.xhtml" styleClass="fa fa-file-o" >
+                                <f:param value="#{e.id}" name="id" />
+                            </p:link>
+                            <p:link outcome="edit.xhtml" styleClass="fa fa-edit">
+                                <f:param value="#{e.id}" name="id" />
+                            </p:link>
+                            <p:link outcome="/app/booking/index.xhtml" rendered="#{sess.user.admin}" styleClass="fa fa-list" >
+                                <f:param value="#{e.id}" name="id" />
+                            </p:link>
+                        </p:column>
+                    </p:dataTable>
+
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:view="http://xmlns.jcp.org/jsf/composite/view">
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="id" value="#{bookingBean.listingID}" />
+            <f:viewAction action="#{bookingBean.init()}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c">
+                    <p:dataTable 
+                        value="#{bookingBean.bookings}" var="e"  emptyMessage="No booking found" widgetVar="dtWidget"
+                        rows="#{bookingListState.rows}" rowsPerPageTemplate="10,20,50,100"  first="#{bookingListState.page}"
+                        binding="#{bookingListState.datatable}" id="dt" paginator="true" paginatorPosition="top"
+                        paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} {NewBooking}"
+                        lazy="true">
+                        <f:facet name="{NewBooking}">
+                            <p:button outcome="edit.xhtml" value="New booking" icon="fa fa-plus" rendered="#{bookingBean.l ne null and (sess.user.admin or sess.user.operator)}" >
+                                <f:param name="listing" value="#{bookingBean.l.id}" />
+                            </p:button>
+                            <p:commandButton onclick="PF('dli').show();" type="button" value="New booking" icon="fa fa-plus" rendered="#{bookingBean.l eq null and (sess.user.admin or sess.user.operator)}" />
+                        </f:facet>
+                        <f:facet name="header">
+                            Bookings 
+                            <h:outputText value="for listing "  rendered="#{bookingBean.l ne null}" />
+                            <p:link outcome="/app/listing/view.xhtml" value="#{bookingBean.l.name}" rendered="#{bookingBean.l ne null}">
+                                <f:param name="id" value="#{bookingBean.l.id}" />
+                            </p:link>
+                        </f:facet>
+                        <p:ajax event="page" listener="#{bookingListState.onPageChange}"/>
+                        <p:ajax event="sort" listener="#{bookingListState.onSortChange}"/>
+                        <p:ajax event="filter" listener="#{bookingListState.onFilterChange}" />
+                        <p:column headerText="ID" sortBy="#{e.id}" filterBy="#{e.id}" filterValue="#{bookingListState.filterState('id').value}" id="id" width="60" filterStyle="width: 50px;">
+                            <h:link outcome="view.xhtml" value="#{e.id}" >
+                                <f:param name="id" value="#{e.id}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="Listing" sortBy="#{e.listing.name}" filterBy="#{e.listing.name}" filterValue="#{bookingListState.filterState('listing.name').value}" rendered="#{bookingBean.l eq null}">
+                            <h:link outcome="/app/listing/view.xhtml" value="#{e.listing.name}" >
+                                <f:param name="id" value="#{e.listing.id}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="Created" sortBy="#{e.created}" filterBy="#{e.created}" filterValue="#{bookingListState.filterState('created').value}" id="createdDate" styleClass="right" width="100">
+                            <f:facet name="filter">
+                                <p:calendar  pattern="d. M. yy" size="5" >
+                                    <p:ajax event="dateSelect"  oncomplete="PF('dtWidget').filter()"/>
+                                    <p:ajax event="change"  oncomplete="PF('dtWidget').filter()"/>
+                                </p:calendar>
+                            </f:facet>
+                            <h:outputText value="#{e.created}">
+                                <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="Start" sortBy="#{e.startDate}" filterBy="#{e.startDate}" filterValue="#{bookingListState.filterState('startDate').value}" id="startDate" styleClass="right" width="100">
+                            <f:facet name="filter">
+                                <p:calendar  pattern="d. M. yy" size="5" >
+                                    <p:ajax event="dateSelect"  oncomplete="PF('dtWidget').filter()"/>
+                                    <p:ajax event="change"  oncomplete="PF('dtWidget').filter()"/>
+                                </p:calendar>
+                            </f:facet>
+                            <h:outputText value="#{e.startDate}">
+                                <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="End" sortBy="#{e.endDate}" filterBy="#{e.endDate}" filterValue="#{bookingListState.filterState('endDate').value}" id="endDate" styleClass="right" width="100">
+                            <f:facet name="filter">
+                                <p:calendar  pattern="d. M. yy" size="5" >
+                                    <p:ajax event="dateSelect"  oncomplete="PF('dtWidget').filter()"/>
+                                    <p:ajax event="change"  oncomplete="PF('dtWidget').filter()"/>
+                                </p:calendar>
+                            </f:facet>
+                            <h:outputText value="#{e.endDate}">
+                                <f:convertDateTime dateStyle="short" type="date" timeZone="#{sess.timezone}" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="Guest" sortBy="#{e.guestName}"  filterBy="#{e.guestName}"  filterValue="#{bookingListState.filterState('guestName').value}" id="guestName">
+                            <h:link outcome="view.xhtml" value="#{e.guestName}" >
+                                <f:param name="id" value="#{e.id}" />
+                            </h:link>
+                            <h:outputText rendered="#{e.guestCount ne null}" value=" + #{e.guestCount-1}" />
+                            <h:outputText rendered="#{e.canceled}" value=" [Canceled]" style="color: darkred" />
+                        </p:column>
+                        <p:column headerText="Price" sortBy="#{e.price.price}" id="price" width="120" styleClass="right">
+                            #{e.price.currency.code}
+                            <h:outputText value="#{e.price.price}">
+                                <f:convertNumber minFractionDigits="2" maxFractionDigits="2" />
+                            </h:outputText>
+
+                        </p:column>
+                        <p:column sortBy="#{e.state}" id="state" width="120">
+                            <f:facet name="header">
+                                State <h:link styleClass="fa fa-filter" onclick="PF('dfi').show();
+                                        return(false);" />
+                            </f:facet>
+                            #{e.state}
+                        </p:column>
+                        <p:column  width="70" styleClass="actions">
+                            <p:link outcome="view.xhtml" styleClass="fa fa-file-o" >
+                                <f:param value="#{e.id}" name="id" />
+                            </p:link>
+                            <p:link outcome="edit.xhtml" styleClass="fa fa-edit" >
+                                <f:param value="#{e.id}" name="id" />
+                            </p:link>
+                        </p:column>
+                    </p:dataTable>
+                    <p:outputPanel  id="bui">						
+                    </p:outputPanel>
+                    <p:dialog modal="true" header="Filter" widgetVar="dfi" responsive="true">
+                        <p:selectManyCheckbox layout="grid" columns="2" value="#{bookingBean.states}" id="stf" converter="#{bookingStateConverter}">
+                            <f:selectItems value="#{enum.bookingStates}" />
+                        </p:selectManyCheckbox>
+                        <p:commandButton update="@form" process="@form" onclick="PF('dfi').hide();
+                                PF('bui').show();" value="UPDATE" icon="fa fa-refresh" />
+                    </p:dialog>
+                    <view:newBookingDialog />
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

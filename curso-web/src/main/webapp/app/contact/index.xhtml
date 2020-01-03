@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c" styleClass="contacts">
+                    <p:dataTable id="dt"
+                                 value="#{contactBean.contactList}" var="e"  emptyMessage="No contacts found"
+                                 >
+                        <f:facet name="header">
+                            Contacts
+                        </f:facet>
+                        <p:column headerText="Type" filterStyle="width: 70px;" class="contacts-column">
+                            <h:outputText value ="#{e.type}"/>
+                        </p:column>
+                        <p:column headerText="User" class="contacts-column">
+                            <h:selectOneListbox size="1" rendered="#{sess.user.admin or (e.type.reception and sess.user.reception) or (e.type.communication and sess.user.operator) or (e.type.reservationsManager and sess.user.listingsManager) or (e.type.cleaningEmergency and sess.user.cleaning) or (e.type eq 'OPERATION' and sess.user.operationsManagement) or (e.type.communicationManager and sess.user.operationsManagement) or (e.type.internalSales and sess.user.internalSales)}" value="#{e.user}" id="op" converter="#{userConverter}" style="width: 90%;" >
+                                <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                <f:selectItems value="#{contactBean.listUsers(e.type)}" var="u" itemLabel="#{u.username} -  #{u.fullname}" />
+                            </h:selectOneListbox>
+                            <h:outputText value="#{e.user.fullname}"  rendered="#{not sess.user.admin and  (not e.type.reception or not sess.user.reception) and (not e.type.communication or not sess.user.operator) and (not e.type.reservationsManager or not sess.user.listingsManager) and (not e.type.cleaningEmergency or not sess.user.cleaning) and not ((e.type eq 'OPERATION') and sess.user.operationsManagement) and (not e.type.communicationManager or not sess.user.operationsManagement) and (not e.type.internalSales or not sess.user.internalSales)}"></h:outputText>
+                        </p:column>
+                        <p:column headerText="Phone" class="contacts-column">
+                            <h:outputText value ="#{e.user.phone}"/>
+                        </p:column>
+                    </p:dataTable>
+                    <p:commandButton rendered="#{sess.user.admin or sess.user.reception or sess.user.operator or sess.user.listingsManager or sess.user.cleaning or sess.user.operationsManagement or sess.user.internalSales}" value="SAVE" actionListener="#{contactBean.save()}"  update=":c:dt :c:bui" process=":c:dt @this" icon="fa fa-save" id="save" />
+                    <p:outputPanel  id="bui">						
+                        <p:blockUI block="dt" animate="false" widgetVar="bui">
+                            <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                        </p:blockUI>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

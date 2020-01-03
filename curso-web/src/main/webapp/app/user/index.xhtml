@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c">
+                    <p:dataTable 
+                        value="#{userBean.users}" var="e"  emptyMessage="No user found"
+                        rows="#{userListState.rows}" rowsPerPageTemplate="10,20,50,100"  first="#{userListState.page}"
+                        binding="#{userListState.datatable}" id="dt" paginator="true" paginatorPosition="top"
+                        paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} {NewUser}"
+                        lazy="true">
+                        <f:facet name="{NewUser}">
+                            <p:button outcome="edit.xhtml" value="New user" icon="fa fa-plus" rendered="#{sess.user.admin or sess.user.hrSupport}" style="margin-left: 10px;"/>
+
+                        </f:facet>
+                        <f:facet name="header">
+                            Users
+                        </f:facet>
+                        <p:ajax event="page" listener="#{userListState.onPageChange}"/>
+                        <p:ajax event="sort" listener="#{userListState.onSortChange}"/>
+                        <p:ajax event="filter" listener="#{userListState.onFilterChange}" />
+                        <p:column headerText="ID" sortBy="#{e.id}" filterBy="#{e.id}" filterValue="#{userListState.filterState('id').value}" id="id" width="40" filterStyle="width: 70%;">
+                            <h:link outcome="view.xhtml" value="#{e.id}" >
+                                <f:param name="id" value="#{e.id}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="Username" sortBy="#{e.username}" filterBy="#{e.username}" filterValue="#{userListState.filterState('username').value}" id="username" width="120" filterStyle="width: 110px;" style="word-wrap: break-word;">
+                            <h:link outcome="view.xhtml" value="#{e.username}" >
+                                <f:param name="id" value="#{e.id}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="Full name" width="120" style="word-wrap: break-word;">
+                            <h:link outcome="view.xhtml" value="#{e.fullname}" >
+                                <f:param name="id" value="#{e.id}" />
+                            </h:link>
+                        </p:column>
+                        <p:column headerText="E-mail" width="180" style="word-wrap: break-word;">
+                            <p:link href="mailto:#{e.email}" value="#{e.email}"  />
+                        </p:column>
+                        <p:column headerText="Phone" width="120" style="word-wrap: break-word;">
+                            #{e.phone}
+                        </p:column>
+                        <p:column rendered="#{sess.user.admin or sess.user.internalSales or sess.user.hrSupport}" width="70" styleClass="actions">
+                            <p:link outcome="view.xhtml" styleClass="fa fa-file-o" >
+                                <f:param value="#{e.id}" name="id" />
+                            </p:link>
+                            <p:link outcome="edit.xhtml" rendered="#{sess.user.admin or sess.user.hrSupport}" styleClass="fa fa-edit" >
+                                <f:param value="#{e.id}" name="id" />
+                            </p:link>
+                            <p:commandLink update="dt :c:bui msgs" rendered="#{sess.user.admin}" styleClass="fa fa-trash" id="del">
+                                <p:confirm header="Delete user" message="Are you sure to delete this user?" icon="fa fa-warning" />
+                                <f:setPropertyActionListener value="#{e}" target="#{userBean.delete}" />
+                            </p:commandLink>
+                        </p:column>
+                    </p:dataTable>
+                    <p:outputPanel  id="bui">						
+                        <p:blockUI block="dt" trigger="dt:del"  animate="false" widgetVar="bui">
+                            <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                        </p:blockUI>
+                    </p:outputPanel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

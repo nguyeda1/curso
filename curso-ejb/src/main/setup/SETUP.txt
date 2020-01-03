@@ -1,0 +1,33 @@
+
+Brief setup instruction for complete applcation environment
+
+1) Create users and databases using postgresql-db-setup.sql
+
+2) Import data (to schema old)
+
+	a) Ensure the database is empty
+	b) Import the data
+	c) ALTER SCHEMA public RENAME TO old;
+	d) CREATE SCHEMA public AUTHORIZATION "curso-dev";
+
+3) Add jdbc configuration from sun-resources.xml to domain.xml
+
+4) Add the realm configuration to your domain.xml /domain/configs/config[name="server-config"]/security-service
+
+        <auth-realm name="curso-dev" classname="com.sun.enterprise.security.auth.realm.jdbc.JDBCRealm">
+          <property name="jaas-context" value="jdbcRealm"></property>
+          <property name="charset" value="UTF-8"></property>
+          <property name="encoding" value="Hex"></property>
+          <property name="digest-algorithm" value="MD5"></property>
+          <property name="digestrealm-password-enc-algorithm" value="MD5"></property>
+
+          <property name="datasource-jndi" value="jdbc/dev/curso"></property>
+
+          <property name="user-table" value="sysuser"></property>
+          <property name="group-table" value="user_group"></property>
+
+          <property name="user-name-column" value="username"></property>
+          <property name="password-column" value="password"></property>
+          <property name="group-name-column" value="groupname"></property>
+          <property name="group-table-user-name-column" value="username"></property>
+        </auth-realm>

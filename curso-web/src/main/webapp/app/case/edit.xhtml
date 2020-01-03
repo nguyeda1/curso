@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:view="http://xmlns.jcp.org/jsf/composite/view">
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="id" value="#{caseEditBean.caseID}" />
+            <f:viewParam name="listingID" value="#{caseEditBean.listingID}" />
+            <f:viewAction action="#{caseEditBean.init()}" />
+            <f:viewParam name="return" value="#{caseEditBean.returnTo}" />
+            <f:viewParam name="template" value="#{caseEditBean.template}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c">
+                    <p:panel id="ce" header="#{caseEditBean.c.id ne null?'Edit':'Create'} case" styleClass="case-edit">
+                        <style type="text/css">
+                            .c1 {width: 70%}
+                            .c2 {width: 30%}
+                            .cc1 {width: 150px}
+                            .cc2 {width: calc(100% - 150px)}
+                            @media (max-width: 640px) {
+                                .c1 {width: auto}
+                                .c2 {width: auto}
+                            }
+                        </style>
+                        <h:panelGrid columns="2" styleClass="mobile-table" columnClasses="c1, c2" style="width: 100%">
+                            <p:panelGrid columns="2" style="width: 100%" columnClasses="cc1, cc2">
+                                Name:
+                                <p:inputText value="#{caseEditBean.c.name}" style="width: calc(100% - 10px)"/>
+                                Listing:
+                                <p:selectOneMenu value="#{caseEditBean.c.listing}" converter="#{listingConverter}">
+                                    <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                    <f:selectItems value="#{caseEditBean.listings}" var="e" itemLabel="#{e.name} (#{e.id})" />
+                                    <p:ajax event="change" process="@this" update="bookings" listener="#{caseEditBean.addBookingsList()}"/>
+                                </p:selectOneMenu>
+                                Booking:
+                                <p:selectOneMenu value="#{caseEditBean.c.booking}" converter="#{bookingConverter}" id="bookings" style="min-width: calc(100% - 33px);">
+                                    <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                    <f:selectItems value="#{caseEditBean.bookings}" var="b" itemLabel="#{b.guestName} #{app.formatDateShort(b.startDate)} -  #{app.formatDateShort(b.endDate)} (#{b.id})" />
+                                </p:selectOneMenu>
+                                Deadline:
+                                <p:calendar value="#{caseEditBean.c.deadline}" />
+                                <h:outputText value="FinishedOn:" rendered="#{caseEditBean.c.id ne null}"/>
+                                <p:calendar value="#{caseEditBean.c.finishedOn}" rendered="#{caseEditBean.c.id ne null}" id="finishedOn"/>
+                                <h:outputText value="Case state:" rendered="#{caseEditBean.c.id ne null}"/>
+                                <h:outputText value="#{caseEditBean.c.caseState.label}" id="caseState" rendered="#{caseEditBean.c.id ne null and (not sess.user.admin and not sess.user.operationsManagement)}"/>
+                                <p:selectOneMenu value="#{caseEditBean.c.caseState}" id="caseStateEdit" rendered="#{caseEditBean.c.id ne null and (sess.user.admin or sess.user.operationsManagement)}">
+                                    <p:ajax event="change" update="finishedOn"
+                                            listener="#{caseEditBean.stateChange}" />	
+                                    <f:selectItems value="#{enum.caseState}" var="u" itemLabel="#{u.label}" />
+                                </p:selectOneMenu>
+                                <h:outputText value="Owner:"/>
+                                <p:selectOneMenu value="#{caseEditBean.c.owner}" required="#{not caseEditBean.c.template}" converter="#{userConverter}" id="owner" >
+
+                                    <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                    <f:selectItems value="#{userBean.userList}" var="u" itemLabel="#{u.username}" />
+                                </p:selectOneMenu>
+                                <h:outputText value="Assignee:" rendered="#{caseEditBean.c.id ne null}"/>
+                                <p:selectOneMenu value="#{caseEditBean.c.assignee}" converter="#{userConverter}" id="assignee" rendered="#{caseEditBean.c.id ne null}" disabled="#{not (sess.user.admin or sess.user.operationsManagement)}">
+                                    <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                    <f:selectItems value="#{caseEditBean.users}" var="u" itemLabel="#{u.username}" />
+                                </p:selectOneMenu>
+                                Priority:
+                                <p:selectOneMenu value="#{caseEditBean.c.priority}" >
+                                    <f:selectItem noSelectionOption="true" itemLabel="- not selected -" />
+                                    <f:selectItems value="#{enum.casePriority}" />
+                                </p:selectOneMenu>
+                                Description:
+                                <p:inputTextarea value="#{caseEditBean.c.description}" />
+                                Tags:
+                                <p:selectManyButton id="tag" value="#{caseEditBean.c.tags}" converter="#{caseTagConverter}" styleClass="case-tags">
+                                    <f:selectItems value="#{caseEditBean.tags}" itemLabel="#{t.name}" var="t"/>
+                                </p:selectManyButton>
+                            </p:panelGrid>
+                            <p:panel>
+                                <view:files type="CASE_IMAGE" refobj="#{caseEditBean.c}" collapsed="false" header="Case files" disabledFolders="true" rendered="#{caseEditBean.c.id ne null}"/>
+                                <p:panel header="Comments (#{caseEditBean.comments.size()})" toggleable="true" id="comments" rendered="#{caseEditBean.c.id ne null}">
+                                    <p:outputPanel id="comments-panel" style="padding: 1ex; ">
+                                        <p:dataList value="#{caseEditBean.comments}" var="c">
+                                            <strong>
+                                                <h:outputText value="#{c.createdOn}">
+                                                    <f:convertDateTime type="both" timeStyle="short" timeZone="#{sess.timezone}" />
+                                                </h:outputText>
+                                                #{c.createdBy.username}:
+                                            </strong>
+                                            <h:outputText value="#{c.text}" style="white-space: pre-wrap;" escape="false" />
+                                        </p:dataList>
+                                        <p:inputTextarea value="#{caseEditBean.newComment.text}" id="comment-text" styleClass="comment-text" style="width: calc(100% - 10px)"  />
+                                        <p:outputPanel>
+                                            <p:commandButton process="comments" update="comments" actionListener="#{caseEditBean.addNewComment}" value="Add" id="addc" />
+                                            <p:menuButton value="Formatting">
+                                                <p:menuitem value="Bold" onclick="appendToComments('&lt;b&gt;&lt;\/b&gt;');"/>
+                                                <p:menuitem value="Italic" onclick="appendToComments('&lt;i&gt;&lt;\/i&gt;');"/>
+                                            </p:menuButton>
+                                        </p:outputPanel>
+                                        <p:blockUI block="comments" widgetVar="buic" animate="false" trigger="addc">
+                                            <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                                        </p:blockUI>
+                                        <script type="application/javascript">
+                                            function appendToComments(text) {
+                                                let note = document.querySelector('.comment-text');
+                                                note.value = note.value + " " + text;
+                                            }
+                                        </script>
+                                    </p:outputPanel>
+                                </p:panel>
+                            </p:panel>
+                        </h:panelGrid>
+                        <p:commandButton ajax="false" action="#{caseEditBean.save()}" value="Save"  icon="fa fa-save" id="save" />
+                        <p:commandButton ajax="false" action="#{caseEditBean.finish()}" value="OK" icon="fa fa-check" id="finish"  />
+                        <p:button outcome="index.xhtml" value="Cases"  icon="fa fa-bars" id="list" >
+                            <f:param name="caseState" value="#{(caseEditBean.returnTo eq null or caseEditBean.returnTo == 'null')?'null':caseEditBean.returnTo}" />
+                            <f:param name="template" value="#{(caseEditBean.template eq null)?'null':caseEditBean.template}" />
+                            <f:param name="role" value="#{(caseEditBean.c.role eq null)?'null':caseEditBean.c.role.name}" />
+                        </p:button>
+                    </p:panel>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>

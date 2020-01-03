@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Blahobyty Tasks</title>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <link rel="shortcut icon" href="#" />
+    <style type="text/css">
+      body {
+        margin: auto;
+        padding: 0;
+      }
+
+      .loader {
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #3498db;
+        width: 30px;
+        height: 30px;
+        -webkit-animation: spin 1s linear infinite; /* Safari */
+        animation: spin 1s linear infinite;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+      }
+
+      /* Safari */
+      @-webkit-keyframes spin {
+        0% {
+          -webkit-transform: rotate(0deg);
+        }
+        100% {
+          -webkit-transform: rotate(360deg);
+        }
+      }
+
+        @keyframes spin {
+               0% {
+                 transform: rotate(0deg);
+               }
+               100% {
+                 transform: rotate(360deg);
+               }
+             }
+    </style>
+  </head>
+  <body>
+    <div id="main_loader" class="loader"></div>
+    <div id="root"></div>
+    <div id="buttons"></div>
+    <!--
+      <script src="static/js/blahobyty-taskmanager-1.0-SNAPSHOT.min.js" >
+      </script>
+    -->
+
+    <script type="text/javascript">
+     var notify = function(a, b, c, d) {
+       console.log("Text: " + a);
+       console.log("Title: " + b);
+       console.log("To call callback function -> c();");
+       console.log("Button: " + d);
+     };
+   </script>
+   <script type="text/javascript">
+     (function(l, o, a, d, j, s) {
+       j = o.createElement(a);
+       s = o.getElementsByTagName(a)[0];
+
+//       if (!d || d.indexOf("${") !== -1) {
+//         j.setAttribute("data-main", l + "require_main.js");
+//         d = "vendor/require.js";
+//       }
+       j.src = l + d;
+       j.async = 1;
+       j.type = "text/javascript";
+       s.parentNode.insertBefore(j, s);
+     })("static/js/", document, "script", "blahobyty-taskmanager-1.0-SNAPSHOT.min.js");
+    </script>
+  </body>
+</html>

@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:view="http://xmlns.jcp.org/jsf/composite/view"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <h:head>
+        <title>Facelet Title</title>
+        <f:metadata>
+            <f:viewParam name="id" value="#{bookingEditBean.bookingID}" />
+            <f:viewParam name="listing" value="#{bookingEditBean.listingID}" />
+            <f:viewAction action="#{bookingEditBean.init()}" />
+        </f:metadata>
+    </h:head>
+    <h:body>
+        <ui:composition template="/templates/main.xhtml" >
+            <ui:define name="body">
+                <h:form id="c" styleClass="booking-edit">
+                    <p:panel id="ce" header="">
+                        <f:facet name="header">
+                            #{bookingEditBean.c.id ne null?'Edit':'Create'} booking
+                            #{bookingEditBean.c.id ne null?bookingEditBean.c.id:''}
+                            <h:outputText value="[canceled]" rendered="#{bookingEditBean.c.canceled}" style="color: red;" />
+                        </f:facet>
+                        <p:panelGrid columns="2" layout="grid" style="padding: 10px 0;">
+                            <p:outputPanel>
+                                <p:panelGrid columns="2">
+                                    Listing:
+                                    <p:link value="#{bookingEditBean.c.listing.name}" outcome="/app/listing/view.xhtml">
+                                        <f:param name="id" value="#{bookingEditBean.c.listing.id}" />
+                                    </p:link>
+                                    Start date:
+                                    <p:calendar value="#{bookingEditBean.startDate}" pattern="dd.MM.yyyy"  required="true" id="startdate">
+                                        <p:ajax event="dateSelect" update="enddate" process="@this" />
+                                        <p:ajax event="change" update="enddate" process="@this" />
+                                    </p:calendar>
+                                    Check-in time:
+                                    <p:calendar value="#{bookingEditBean.startTime}" pattern="HH:mm" timeControlType="slider" timeOnly="true" >
+                                        <p:ajax event="dateSelect" process="@this" />
+                                        <p:ajax event="change"  process="@this" />
+                                    </p:calendar>
+                                    End date:
+                                    <p:calendar value="#{bookingEditBean.c.endDate}" pattern="dd.MM.yyyy" mindate="#{bookingEditBean.c.startDate}"  id="enddate" required="true" >
+                                        <p:ajax event="dateSelect" process="@this" />
+                                    </p:calendar>
+                                    Check-out time:
+                                    <p:calendar value="#{bookingEditBean.c.endTime}" pattern="HH:mm" timeControlType="slider" timeOnly="true" />
+
+                                    Guest name:
+                                    <p:outputPanel>
+                                        <p:inputText requiredMessage="Guest name is required!" required="true" value="#{bookingEditBean.c.guestName}" />
+                                        <h:outputText id="similarity" styleClass="fa fa-exclamation-triangle" rendered="#{bookingEditBean.hasSimilarGuestName()}" style="margin-left: 5px; color: orange"/>
+                                        <p:tooltip for="similarity" value="Double check templates"/>
+                                    </p:outputPanel>
+                                    Guests count:
+                                    <p:inputText value="#{bookingEditBean.c.guestCount}" >
+                                        <f:convertNumber integerOnly="true" />
+                                    </p:inputText>
+
+
+                                    <h:outputText value="State:" rendered="#{sess.user.admin or sess.user.listingsManager or sess.user.operationsManagement}" />
+                                    <p:outputPanel styleClass="button-group" rendered="#{sess.user.admin or sess.user.listingsManager or sess.user.operationsManagement}">
+                                        <p:selectOneButton value="#{bookingEditBean.c.state}" style="min-height: 80px;"
+                                                           required="true" requiredMessage="Booking state is required">
+                                            <f:selectItems value="#{enum.bookingStates}" />
+                                        </p:selectOneButton>
+                                    </p:outputPanel>
+                                    Price:
+                                    <p:outputPanel>
+                                        <p:inputText value="#{bookingEditBean.c.price.price}" >
+                                            <f:convertNumber minFractionDigits="2" maxFractionDigits="2" />
+                                        </p:inputText>
+                                        <h:selectOneListbox value="#{bookingEditBean.c.price.currency}" converter="#{currencyConverter}" size="1" disabled="true">
+                                            <f:selectItem noSelectionOption="true" itemLabel=" " />
+                                            <f:selectItems value="#{currencyBean.currenciesList}" var="c" itemLabel="#{c.code}" />
+                                        </h:selectOneListbox>
+                                    </p:outputPanel>
+                                </p:panelGrid>
+                            </p:outputPanel>
+                        </p:panelGrid>
+                        <div style="text-align: center; margin: 10px 20px">
+                            <p:commandButton ajax="false" action="#{bookingEditBean.save()}" value="Save"  icon="fa fa-save" id="save" styleClass="ui-mobile-button" />
+                            <p:commandButton ajax="false" action="#{bookingEditBean.finish()}" value="Save &amp; back" icon="fa fa-save" id="finish" styleClass="ui-mobile-button" />						
+                            <p:commandButton value="Cancel" icon="fa fa-ban"  onsuccess="PF('cancelBooking').show();return false;"  process="@this" style="text-decoration: none;" styleClass="ui-mobile-button" rendered="#{sess.user.admin or sess.user.listingsManager or sess.user.operationsManagement}">
+                            </p:commandButton>
+                            <p:button outcome="index.xhtml" value="Bookings"  icon="fa fa-bars" id="list" styleClass="ui-mobile-button">
+                                <f:param name="id" value="#{bookingEditBean.c.listing.id}" />
+                            </p:button>
+                        </div>
+                    </p:panel>
+                    <p:dialog id="dlgCancel" modal="true" widgetVar="cancelBooking" header="Are you sure you want to cancel the booking?">
+                        <p:outputPanel id="cancdlg">
+
+                            <p:commandButton process="cancdlg" icon="fa fa-check" value="Cancel" ajax="true" onstart="PF('bni').show();" update="cancdlg :msgs" oncomplete="PF('cancelBooking').hide();" action="#{bookingEditBean.delete()}" />
+                            <p:blockUI block="cancdlg" widgetVar="bni" animate="false">
+                                <p:graphicImage value="/_static/images/ajax-loader.gif" />
+                            </p:blockUI>
+                        </p:outputPanel>
+                    </p:dialog>
+                </h:form>
+            </ui:define>
+        </ui:composition>
+    </h:body>
+</html>
