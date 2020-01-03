@@ -1,18 +1,19 @@
 # Lokální spuštění
-
 ## Instalace a nasazení
 Pro lokální spuštění je třeba mít nainstalovaný PostgreSQL, Maven a JDK. Stažení PostgreSQL https://www.postgresql.org/download/. Instalace Mavenu a JDK https://howtodoinjava.com/maven/how-to-install-maven-on-windows/.
 
-1. **Vytvoření lokální databáze pomocí psql skriptu:**
+1. **Stáhnout projekt curso z github repozitáře https://github.com/nguyeda1/curso**
+
+2. **Vytvoření lokální databáze pomocí psql skriptu:**
 
     
     CREATE USER "curso−dev" WITH PASSWORD ’xxx’;
     CREATE DATABASE "curso−dev" WITH ENCODING=’UTF8’ OWNER="curso−dev" CONNECTION LIMIT=−1;
     
 
-2. **Stažení aplikačního serveru Payara https://www.payara.fish/software/downloads/**
+3. **Stažení aplikačního serveru Payara https://www.payara.fish/software/downloads/**
 
-3. **Ve složce staženáPayara/glassfish/config/domain1/config je soubor domain.xml, který upravíte.**
+4. **Ve složce staženáPayara/glassfish/config/domain1/config je soubor domain.xml, který upravíte.**
 
 K node security-service přidejte následující:
       
@@ -50,14 +51,15 @@ K node server přidejte následující:
 
       
       <resource−ref ref="jdbc/dev/curso"></resource−ref>
+    
       
-4. **Ve složce curso spusťte příkazový řádek a v něm příkaz:**
+5. **Ve složce curso spusťte příkazový řádek a v něm příkaz:**
     ```
     mvn clean install
     ```
       
 
-5. **Ve složce staženáPayara/bin spusťte příkazový řádek a v něm příkazy (jeden po druhém):**
+6. **Ve složce staženáPayara/bin spusťte příkazový řádek a v něm příkazy (jeden po druhém):**
     ```
     ./asadmin start−domain
     ./asadmin deploy curso/curso-ear/target/curso-dev-ear-1.0-SNAPSHOT.ear
