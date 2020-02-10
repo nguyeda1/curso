@@ -1,3 +1,5 @@
+# Popis
+Task management systém pro společnost Blahobyty s.r.o.
 # Lokální spuštění
 ## Instalace a nasazení
 Pro lokální spuštění je třeba mít nainstalovaný PostgreSQL, Maven a JDK. Stažení PostgreSQL https://www.postgresql.org/download/. Instalace Mavenu a JDK https://howtodoinjava.com/maven/how-to-install-maven-on-windows/.
